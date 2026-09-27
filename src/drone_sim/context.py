@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import csv
+import hashlib
+import io
 import json
 import mimetypes
 import os
@@ -15,6 +17,18 @@ from typing import Any, Literal, Protocol, Sequence
 from pydantic import BaseModel, ConfigDict, Field
 
 from drone_sim.ir import DeploymentIR
+from drone_sim.provenance import (
+    ConfidenceLevel,
+    EvidenceBackedDeployment,
+    EvidenceCandidate,
+    ExtractionMethod,
+    MaterialFact,
+    SourceAnchor,
+    SourceLocationType,
+    Uncertainty,
+    ValueOrigin,
+    material_values,
+)
 
 
 TOKEN_RE = re.compile(r"[a-z0-9]+")
@@ -108,6 +122,7 @@ class ParsedFile(BaseModel):
 
     adapter: str
     content: Any
+    sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
 
 
 class DeterministicFileReader:
@@ -127,17 +142,18 @@ class DeterministicFileReader:
         if path.stat().st_size > self.max_file_bytes:
             raise ValueError(f"file exceeds {self.max_file_bytes} byte read limit")
 
+        raw = path.read_bytes()
+        digest = hashlib.sha256(raw).hexdigest()
         suffix = path.suffix.lower()
         if suffix in {".json", ".geojson"}:
-            with path.open("r", encoding="utf-8") as handle:
-                return ParsedFile(adapter="json", content=json.load(handle))
+            return ParsedFile(
+                adapter="json", content=json.loads(raw.decode("utf-8")), sha256=digest
+            )
         if suffix == ".csv":
-            with path.open("r", encoding="utf-8", newline="") as handle:
-                rows = list(csv.DictReader(handle))
-            return ParsedFile(adapter="csv", content=rows)
+            rows = list(csv.DictReader(io.StringIO(raw.decode("utf-8"), newline="")))
+            return ParsedFile(adapter="csv", content=rows, sha256=digest)
         if suffix in {".md", ".txt"}:
-            with path.open("r", encoding="utf-8") as handle:
-                return ParsedFile(adapter="text", content=handle.read())
+            return ParsedFile(adapter="text", content=raw.decode("utf-8"), sha256=digest)
         raise ValueError(f"no deterministic adapter for {suffix or 'extensionless file'}")
 
 
@@ -148,6 +164,11 @@ class CandidateFact(BaseModel):
     value: Any
     source_path: str
     adapter: str
+    source_location: str
+    source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    origin: ValueOrigin = ValueOrigin.OBSERVED
+    confidence: ConfidenceLevel = ConfidenceLevel.UNKNOWN
+    uncertainty_basis: str = "Source supplied no calibrated confidence information"
 
 
 LiteralOutcome = Literal["candidate_extracted", "no_candidate", "unresolved", "parse_error"]
@@ -168,9 +189,9 @@ class InspectionEvent(BaseModel):
 class DeploymentState(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    state_version: str = "0.1.0"
+    state_version: str = "0.2.0"
     root: str
-    candidates: dict[str, CandidateFact] = Field(default_factory=dict)
+    candidates: dict[str, list[CandidateFact]] = Field(default_factory=dict)
     attempted_fields: set[str] = Field(default_factory=set)
     inspected_paths: set[str] = Field(default_factory=set)
     trace: list[InspectionEvent] = Field(default_factory=list)
@@ -260,7 +281,7 @@ class ContextOrchestrator:
         self.semantic_ranker = semantic_ranker
         self.candidates_per_field = candidates_per_field
 
-    def run(self) -> tuple[DeploymentIR | None, DeploymentState]:
+    def run(self) -> tuple[EvidenceBackedDeployment | None, DeploymentState]:
         state = self.store.load_or_create(self.index.root)
         for field, query in FIELD_QUERIES.items():
             if field in state.candidates or field in state.attempted_fields:
@@ -272,8 +293,9 @@ class ContextOrchestrator:
             return None, state
 
         values = dict(DEFAULTS)
-        values.update({key: fact.value for key, fact in state.candidates.items()})
-        return DeploymentIR.model_validate(values), state
+        values.update({key: facts[0].value for key, facts in state.candidates.items()})
+        deployment = DeploymentIR.model_validate(values)
+        return self._evidence_backed(deployment, state), state
 
     def _resolve(self, field: str, query: str, state: DeploymentState) -> None:
         matches = self.index.search(
@@ -315,7 +337,6 @@ class ContextOrchestrator:
                 )
                 if extracted is not None:
                     self._record_candidates(record.path, parsed, field, extracted, state)
-                    break
             except (OSError, UnicodeError, ValueError, json.JSONDecodeError) as error:
                 state.trace.append(
                     InspectionEvent(
@@ -334,34 +355,123 @@ class ContextOrchestrator:
         source_path: str,
         parsed: ParsedFile,
         requested_field: str,
-        extracted: Any,
+        extracted: tuple[Any, str],
         state: DeploymentState,
     ) -> None:
-        values = {requested_field: extracted}
+        extracted_value, extracted_location = extracted
+        values = {requested_field: (extracted_value, extracted_location)}
         if isinstance(parsed.content, dict):
             values.update(
-                (field, parsed.content[field])
+                (field, (parsed.content[field], f"/{_escape_pointer(field)}"))
                 for field in FIELD_QUERIES
                 if field in parsed.content
             )
-        for field, value in values.items():
-            state.candidates.setdefault(
-                field,
+        for field, (value, source_location) in values.items():
+            candidates = state.candidates.setdefault(field, [])
+            if any(
+                candidate.source_path == source_path
+                and candidate.source_location == source_location
+                for candidate in candidates
+            ):
+                continue
+            candidates.append(
                 CandidateFact(
                     field=field,
                     value=value,
                     source_path=source_path,
                     adapter=parsed.adapter,
+                    source_location=source_location,
+                    source_sha256=parsed.sha256,
                 ),
             )
 
     @staticmethod
-    def _extract(field: str, source_path: str, content: Any) -> Any | None:
+    def _extract(
+        field: str, source_path: str, content: Any
+    ) -> tuple[Any, str] | None:
         if not isinstance(content, dict):
             return None
         if field in content:
-            return content[field]
+            return content[field], f"/{_escape_pointer(field)}"
         stem = Path(source_path).stem
         if _tokens(stem) == _tokens(field):
-            return content
+            return content, ""
         return None
+
+    @staticmethod
+    def _evidence_backed(
+        deployment: DeploymentIR, state: DeploymentState
+    ) -> EvidenceBackedDeployment:
+        selected_values = material_values(deployment)
+        facts: list[MaterialFact] = []
+        for path, value in selected_values.items():
+            top_level, relative = _split_deployment_path(path)
+            candidates = state.candidates[top_level]
+            selected = _leaf_candidate(candidates[0], path, relative, value)
+            competing: list[EvidenceCandidate] = []
+            for candidate in candidates[1:]:
+                alternative = _value_at_pointer(candidate.value, relative)
+                if alternative is _MISSING or alternative == value:
+                    continue
+                competing.append(_leaf_candidate(candidate, path, relative, alternative))
+            facts.append(
+                MaterialFact(path=path, selected=selected, competing=tuple(competing))
+            )
+        return EvidenceBackedDeployment(deployment=deployment, facts=tuple(facts))
+
+
+_MISSING = object()
+
+
+def _escape_pointer(value: str) -> str:
+    return value.replace("~", "~0").replace("/", "~1")
+
+
+def _unescape_pointer(value: str) -> str:
+    return value.replace("~1", "/").replace("~0", "~")
+
+
+def _split_deployment_path(path: str) -> tuple[str, str]:
+    parts = path.removeprefix("/").split("/")
+    relative = "/" + "/".join(parts[1:]) if len(parts) > 1 else ""
+    return _unescape_pointer(parts[0]), relative
+
+
+def _value_at_pointer(value: Any, pointer: str) -> Any:
+    current = value
+    for encoded in pointer.removeprefix("/").split("/"):
+        if not encoded:
+            continue
+        token = _unescape_pointer(encoded)
+        try:
+            current = current[int(token)] if isinstance(current, list) else current[token]
+        except (IndexError, KeyError, TypeError, ValueError):
+            return _MISSING
+    return current
+
+
+def _leaf_candidate(
+    candidate: CandidateFact, deployment_path: str, relative_path: str, value: Any
+) -> EvidenceCandidate:
+    source_location = candidate.source_location + relative_path
+    identity = "\0".join(
+        (candidate.source_sha256, source_location, deployment_path, repr(value))
+    )
+    candidate_id = hashlib.sha256(identity.encode("utf-8")).hexdigest()[:24]
+    return EvidenceCandidate(
+        id=candidate_id,
+        value=value,
+        origin=candidate.origin,
+        sources=(
+            SourceAnchor(
+                source_path=candidate.source_path,
+                location_type=SourceLocationType.JSON_POINTER,
+                locator=source_location,
+                sha256=candidate.source_sha256,
+            ),
+        ),
+        extraction=ExtractionMethod(name=candidate.adapter, version="1"),
+        uncertainty=Uncertainty(
+            confidence=candidate.confidence, basis=candidate.uncertainty_basis
+        ),
+    )

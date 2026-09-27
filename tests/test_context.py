@@ -81,12 +81,17 @@ def test_orchestrator_reconstructs_ir_without_reading_irrelevant_file(tmp_path: 
     make_curated_folder(source)
     state_path = tmp_path / "state" / "deployment.json"
 
-    deployment, state = ContextOrchestrator(source, state_path).run()
+    evidence, state = ContextOrchestrator(source, state_path).run()
 
-    assert deployment is not None
-    assert deployment.deployment_id == "demo-001"
-    assert deployment.vehicle.airframe == "multirotor"
-    assert deployment.mission.route.points[1].position.altitude_m == 20
+    assert evidence is not None
+    assert evidence.deployment.deployment_id == "demo-001"
+    assert evidence.deployment.vehicle.airframe == "multirotor"
+    assert evidence.deployment.mission.route.points[1].position.altitude_m == 20
+    mass = evidence.fact("/vehicle/mass_kg")
+    assert mass.selected.value == 2.4
+    assert mass.selected.sources[0].source_path == "aircraft_vehicle.json"
+    assert mass.selected.sources[0].locator == "/vehicle/mass_kg"
+    assert mass.selected.uncertainty.confidence == "unknown"
     assert "irrelevant_notes.txt" not in state.inspected_paths
     assert state_path.exists()
     assert all(event.reason for event in state.trace)
@@ -116,8 +121,35 @@ def test_single_canonical_manifest_is_only_read_once(tmp_path: Path) -> None:
     ).run()
 
     assert deployment is not None
-    assert deployment.deployment_id == "warehouse-roof-inspection-001"
+    assert deployment.deployment.deployment_id == "warehouse-roof-inspection-001"
     assert state.inspected_paths == {"deployment.json"}
+
+
+def test_orchestrator_preserves_competing_candidate_values(tmp_path: Path) -> None:
+    source = tmp_path / "deployment"
+    make_curated_folder(source)
+    write_json(
+        source,
+        "backup_aircraft_vehicle.json",
+        {
+            "vehicle": {
+                "id": "uav-1",
+                "airframe": "multirotor",
+                "mass_kg": 2.7,
+                "dimensions_m": [0.6, 0.6, 0.3],
+            }
+        },
+    )
+
+    evidence, state = ContextOrchestrator(
+        source, tmp_path / "conflict-state.json"
+    ).run()
+
+    assert evidence is not None
+    mass = evidence.fact("/vehicle/mass_kg")
+    assert mass.selected.value == 2.4
+    assert [candidate.value for candidate in mass.competing] == [2.7]
+    assert len(state.candidates["vehicle"]) == 2
 
 
 def test_state_must_be_outside_read_only_root(tmp_path: Path) -> None:

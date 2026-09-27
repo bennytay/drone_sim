@@ -104,3 +104,23 @@ compute cost while keeping tests credible.
 **Revisit when:** Evaluation evidence shows missing scene detail materially
 changes decisions across important drone failure modes or richer acquisition
 becomes cheap enough to alter the trade-off.
+
+## ADR-009: Carry provenance in a versioned evidence envelope
+
+**Decision:** Keep Deployment IR's canonical values free of ingestion-specific
+wrappers and carry them in an `EvidenceBackedDeployment` envelope. Require one
+evidence record for every populated scalar field, addressed by JSON Pointer.
+Each record keeps the selected and competing candidates, exact source anchors,
+extraction method, qualitative uncertainty, value origin, assumptions, and
+derivation inputs.
+
+**Rationale:** Wrapping every value would make canonical drone semantics hard
+to consume and would couple all evaluators to ingestion mechanics. A validated
+envelope preserves a complete, portable chain while allowing deterministic
+models and simulators to consume ordinary typed values. Ordinal confidence with
+a written basis avoids implying that uncalibrated scores are probabilities.
+
+**Revisit when:** Field-level wrappers materially simplify multiple downstream
+implementations, or evidence shows JSON Pointer identity is unstable across
+required schema migrations. Any replacement must retain complete coverage,
+conflicts, assumptions, and derivation lineage.
