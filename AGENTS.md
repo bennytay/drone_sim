@@ -78,4 +78,10 @@ Immediately after that commit:
 - gh pr create, not draft, with the issue id in the title and a link to the Linear issue in the body
 - comment the PR URL on the Linear issue and move it to In Review
 
-Never push to main, force-push, amend, or merge. If tests fail, stop and say so. Do not open the PR.
+Never push to main, force-push, or amend.
+
+After the PR is open, enable auto-merge. Do not merge unless GitHub checks are green. If checks fail, stop.
+
+Turn on auto-merge in the repo, and require the test check in branch protection. Then the agent can finish the ticket without you, and a red test still blocks main.
+
+Do not add "merge everything" with no checks. That is faster for an hour and slower for the rest of the MVP.
