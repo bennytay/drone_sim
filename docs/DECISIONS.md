@@ -143,3 +143,21 @@ structured findings tell the context agent exactly what evidence to seek next.
 **Revisit when:** Real drone evaluations show stable dependency families that
 should become a versioned registry, or calibrated uncertainty supports more
 precise thresholds without creating false confidence.
+
+## ADR-011: Bounded deterministic source-adapter registry
+
+**Decision:** Dispatch deployment artifacts through a suffix-registered,
+deterministic adapter interface returning a common `ParsedSource`. Parse small
+structured files directly, stream large tabular telemetry into summaries,
+bound extracted document text, and return metadata rather than raw bytes for
+binary drone logs, site models, point clouds, images, and video.
+
+**Rationale:** Agents need searchable evidence summaries, not raw multi-gigabyte
+logs or meshes. A single bounded result contract keeps parsing reproducible,
+records source hashes and truncation, and allows format-specific decoders to be
+added without putting vendor semantics into Deployment IR or using an LLM as a
+parser.
+
+**Revisit when:** A material drone evaluation requires random access to a
+specific time-series or geometry payload. Add a typed selective-query method or
+specialized deterministic decoder while retaining bounded agent-facing output.

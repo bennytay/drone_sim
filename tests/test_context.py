@@ -208,13 +208,16 @@ def test_index_skips_symlinks(tmp_path: Path) -> None:
     assert DirectoryIndex.build(source).records == ()
 
 
-def test_reader_enforces_size_limit(tmp_path: Path) -> None:
+def test_reader_enforces_materialization_limit(tmp_path: Path) -> None:
     source = tmp_path / "deployment"
     source.mkdir()
     (source / "large.txt").write_text("12345")
 
-    with pytest.raises(ValueError, match="read limit"):
-        DeterministicFileReader(source, max_file_bytes=4).parse("large.txt")
+    parsed = DeterministicFileReader(source, max_file_bytes=4).parse("large.txt")
+
+    assert parsed.content == "1234"
+    assert parsed.bytes_materialized == 4
+    assert parsed.truncated
 
 
 def test_reader_rejects_internal_symlink(tmp_path: Path) -> None:

@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import csv
 import hashlib
-import io
 import json
 import mimetypes
 import os
@@ -16,6 +14,7 @@ from typing import Any, Literal, Protocol, Sequence
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
+from drone_sim.adapters import AdapterRegistry, DEFAULT_ADAPTERS, ParsedSource
 from drone_sim.ir import DeploymentIR
 from drone_sim.provenance import (
     ConfidenceLevel,
@@ -124,44 +123,32 @@ class DirectoryIndex:
         return tuple(record for score, record in scored if score > 0)[:limit]
 
 
-class ParsedFile(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True, frozen=True)
-
-    adapter: str
-    content: Any
-    sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
-
-
 class DeterministicFileReader:
     """Bounded parsers with path confinement and no write capability."""
 
-    def __init__(self, root: Path, *, max_file_bytes: int = MAX_FILE_BYTES) -> None:
+    def __init__(
+        self,
+        root: Path,
+        *,
+        max_file_bytes: int = MAX_FILE_BYTES,
+        adapters: AdapterRegistry = DEFAULT_ADAPTERS,
+    ) -> None:
         self.root = root.resolve(strict=True)
+        if max_file_bytes <= 0:
+            raise ValueError("max_file_bytes must be positive")
         self.max_file_bytes = max_file_bytes
+        self.adapters = adapters
 
-    def parse(self, relative_path: str) -> ParsedFile:
+    def parse(self, relative_path: str) -> ParsedSource:
         unresolved = self.root / relative_path
         if unresolved.is_symlink():
             raise ValueError("symlinks are not readable deployment evidence")
         path = unresolved.resolve(strict=True)
         if not path.is_relative_to(self.root):
             raise ValueError("file path escapes the deployment root")
-        if path.stat().st_size > self.max_file_bytes:
-            raise ValueError(f"file exceeds {self.max_file_bytes} byte read limit")
-
-        raw = path.read_bytes()
-        digest = hashlib.sha256(raw).hexdigest()
-        suffix = path.suffix.lower()
-        if suffix in {".json", ".geojson"}:
-            return ParsedFile(
-                adapter="json", content=json.loads(raw.decode("utf-8")), sha256=digest
-            )
-        if suffix == ".csv":
-            rows = list(csv.DictReader(io.StringIO(raw.decode("utf-8"), newline="")))
-            return ParsedFile(adapter="csv", content=rows, sha256=digest)
-        if suffix in {".md", ".txt"}:
-            return ParsedFile(adapter="text", content=raw.decode("utf-8"), sha256=digest)
-        raise ValueError(f"no deterministic adapter for {suffix or 'extensionless file'}")
+        return self.adapters.parse(
+            path, max_materialized_bytes=self.max_file_bytes
+        )
 
 
 class CandidateFact(BaseModel):
@@ -382,7 +369,7 @@ class ContextOrchestrator:
     @staticmethod
     def _record_candidates(
         source_path: str,
-        parsed: ParsedFile,
+        parsed: ParsedSource,
         requested_field: str,
         extracted: tuple[Any, str],
         state: DeploymentState,

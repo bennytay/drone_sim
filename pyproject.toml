@@ -7,7 +7,7 @@ name = "drone-deployment-ir"
 version = "0.1.0"
 description = "Canonical deployment representation for drone readiness verification"
 requires-python = ">=3.11"
-dependencies = ["pydantic>=2.7,<3"]
+dependencies = ["pydantic>=2.7,<3", "pypdf>=6,<7"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8,<9"]
