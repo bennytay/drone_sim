@@ -44,6 +44,21 @@ are streamed into samples and numeric ranges; documents expose bounded text;
 and drone logs, site geometry, point clouds, images, and video expose metadata
 without loading raw binary or time-series content into agent context.
 
+Reconstruction is dependency-driven rather than folder-layout-driven. Reusable
+drone dependency templates define aliases, search terms, preferred artifact
+formats, requiredness, and a last-resort clarification question. Metadata search
+combines lexical relevance, optional semantic ranking, format preference, and
+explicit current/stale filename signals. Parsed summaries are cached outside
+the model context and invalidated when the folder index changes. Deterministic
+alias normalization handles renamed and nested operator bundles while retaining
+exact original source pointers. Shared deployment, vehicle, and site identifiers
+link evidence across structured files and bounded document summaries.
+
+The agent asks the operator only after relevant files and structured fallbacks
+have been exhausted. Clarification requests name the unresolved material field,
+the evidence paths already searched, and the concrete question needed to cross
+the readiness threshold.
+
 ### Deployment IR
 
 Deployment IR is the canonical description of deployment reality and intent:
