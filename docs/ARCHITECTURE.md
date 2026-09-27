@@ -36,6 +36,14 @@ and auditable.
 The agent decides what evidence to seek and which adapter to invoke. It does not
 invent source facts or hide parsing inside free-form reasoning.
 
+Source parsing is a deterministic registry boundary. Each adapter declares its
+supported suffixes and returns a common bounded `ParsedSource` containing the
+artifact kind, structured summary, source hash, byte size, materialized size,
+and truncation state. Structured manifests remain size-limited; large CSV logs
+are streamed into samples and numeric ranges; documents expose bounded text;
+and drone logs, site geometry, point clouds, images, and video expose metadata
+without loading raw binary or time-series content into agent context.
+
 ### Deployment IR
 
 Deployment IR is the canonical description of deployment reality and intent:

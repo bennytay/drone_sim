@@ -42,6 +42,11 @@ and stable lineage IDs for every populated scalar Deployment IR field. An
 optional semantic ranker can augment the built-in lexical search without
 receiving file contents.
 
+The adapter registry handles JSON/GeoJSON, summarized CSV, bounded text, PDF,
+DOCX, KML, drone telemetry containers, meshes/point clouds, and image/video
+metadata. Large streams and binary assets are hashed and summarized; their raw
+contents never enter the agent-facing parsed result.
+
 Before output, the CLI applies the drone hypothesis-generation readiness
 profile. Missing dependencies, invalid values or units, uncertainty below the
 profile threshold, and unresolved conflicts produce a structured readiness
@@ -52,4 +57,5 @@ perception, or other drone evaluation classes.
 See [Deployment IR v0.1 design](docs/deployment-ir-v0.1.md) for the canonical
 schema boundary and [Provenance and uncertainty](docs/provenance-v0.1.md) for
 the evidence contract. See [Completeness validation](docs/validation-v0.1.md)
-for readiness thresholds and conflict handling.
+for readiness thresholds and conflict handling, and
+[Source adapters](docs/source-adapters-v0.1.md) for bounded parsing contracts.
