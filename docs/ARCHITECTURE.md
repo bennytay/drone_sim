@@ -7,7 +7,7 @@ This document is the canonical current system model. Product intent lives in
 
 ```text
 local-folder context agent
-  -> Deployment IR
+  -> evidence-backed Deployment IR
   -> failure hypothesis engine
   -> capability/model registry
   -> Scenario Spec
@@ -46,6 +46,16 @@ other vendor or backend.
 
 Source adapters translate source-specific semantics into Deployment IR. They do
 not leak their native field names into the canonical representation.
+
+Deployment IR travels in a versioned evidence envelope. Every populated scalar
+field has a stable JSON Pointer and a selected evidence candidate recording its
+exact source anchor, extraction method, qualitative uncertainty, and value
+origin. Competing candidates remain attached rather than being discarded.
+Explicit assumptions are identified and justified. Inferred, estimated, and
+model-derived candidates cite their inputs by stable candidate ID, allowing
+scenario generation and reporting to retain the complete lineage. Envelope
+validation rejects missing coverage, mismatched selected values, dangling
+references, and derivation cycles.
 
 ### Failure hypothesis engine
 

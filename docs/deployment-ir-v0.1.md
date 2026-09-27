@@ -28,10 +28,12 @@ small enough to inspect, validate, persist, and pass between services.
 fields and unknown versions fail validation. Adapters must explicitly migrate
 their output when the schema changes.
 
-Version 0.1 intentionally does not model provenance, confidence, conflicts, or
-completeness. Those are state around candidate facts and become first-class in
-milestone 2; adding them prematurely would couple the canonical deployment to
-the ingestion workflow.
+Version 0.1 intentionally does not embed provenance, confidence, conflicts, or
+completeness in each canonical field. Those concerns are first-class in the
+versioned `EvidenceBackedDeployment` envelope described in
+[`provenance-v0.1.md`](provenance-v0.1.md). Keeping the envelope separate lets
+downstream stages consume canonical values while retaining their evidence graph
+without coupling Deployment IR semantics to one ingestion workflow.
 
 ## Deliberate omissions
 
