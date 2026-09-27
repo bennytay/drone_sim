@@ -228,3 +228,138 @@ def test_reader_rejects_internal_symlink(tmp_path: Path) -> None:
 
     with pytest.raises(ValueError, match="symlinks"):
         DeterministicFileReader(source).parse("linked.json")
+
+
+def test_reconstructs_renamed_nested_operator_bundle_with_exact_anchors(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "deployment"
+    source.mkdir()
+    bundle = {
+        "release_bundle": {
+            "operation_id": "messy-001",
+            "aircraft": {
+                "aircraft_id": "uav-9",
+                "type": "multirotor",
+                "takeoff_mass_kg": 3.1,
+                "size_m": [0.7, 0.7, 0.3],
+            },
+            "flight_plan": {
+                "title": "Tank inspection",
+                "purpose": "Capture tank roof imagery",
+                "route": {
+                    "points": [
+                        {
+                            "id": "a",
+                            "position": {
+                                "latitude_deg": -33.8,
+                                "longitude_deg": 151.2,
+                                "altitude_m": 10,
+                                "altitude_reference": "above_ground",
+                            },
+                        },
+                        {
+                            "id": "b",
+                            "position": {
+                                "latitude_deg": -33.81,
+                                "longitude_deg": 151.21,
+                                "altitude_m": 20,
+                                "altitude_reference": "above_ground",
+                            },
+                        },
+                    ]
+                },
+            },
+            "operating_site": {"site_name": "Tank farm"},
+            "flight_control": {
+                "control_mode": "supervised_autonomous",
+                "flight_controller": "waypoint_follower",
+            },
+            "acceptance_criteria": [
+                {
+                    "criterion_id": "complete",
+                    "measure": "route_completion",
+                    "operator": "gte",
+                    "threshold": 0.98,
+                }
+            ],
+        }
+    }
+    write_json(source, "misc.json", bundle)
+    write_json(
+        source,
+        "reference_telemetry.json",
+        {"vehicle_id": "uav-9", "note": "log index"},
+    )
+
+    evidence, state = ContextOrchestrator(
+        source, tmp_path / "messy-state.json"
+    ).run()
+
+    assert evidence is not None
+    assert evidence.deployment.deployment_id == "messy-001"
+    assert evidence.deployment.vehicle.mass_kg == 3.1
+    assert evidence.deployment.mission.objective == "Capture tank roof imagery"
+    assert evidence.deployment.site.name == "Tank farm"
+    assert (
+        evidence.fact("/vehicle/mass_kg").selected.sources[0].locator
+        == "/release_bundle/aircraft/takeoff_mass_kg"
+    )
+    assert any(link.entity_type == "vehicle" for link in state.entity_links)
+
+
+def test_current_evidence_outranks_stale_backup(tmp_path: Path) -> None:
+    source = tmp_path / "deployment"
+    make_curated_folder(source)
+    original = json.loads((source / "aircraft_vehicle.json").read_text())
+    (source / "aircraft_vehicle.json").unlink()
+    stale = json.loads(json.dumps(original))
+    stale["vehicle"]["mass_kg"] = 2.9
+    write_json(source, "backup_old_aircraft.json", stale)
+    write_json(source, "approved_current_aircraft.json", original)
+
+    evidence, _ = ContextOrchestrator(
+        source, tmp_path / "rank-state.json"
+    ).run()
+
+    assert evidence is not None
+    assert evidence.deployment.vehicle.mass_kg == 2.4
+    mass = evidence.fact("/vehicle/mass_kg")
+    assert mass.selected.sources[0].source_path == "approved_current_aircraft.json"
+    assert [candidate.value for candidate in mass.competing] == [2.9]
+
+
+def test_clarification_is_deferred_until_search_exhaustion_and_resume_finds_new_file(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "deployment"
+    source.mkdir()
+    write_json(source, "misc.json", {"operation_id": "resume-001"})
+    state_path = tmp_path / "resume-state.json"
+    first = ContextOrchestrator(source, state_path)
+
+    evidence, state = first.run()
+    requests = first.clarification_requests(state)
+
+    assert evidence is None
+    assert any(request.field == "vehicle" for request in requests)
+    write_json(
+        source,
+        "approved_current_aircraft.json",
+        {
+            "aircraft": {
+                "aircraft_id": "uav-resume",
+                "type": "multirotor",
+                "takeoff_mass_kg": 2.0,
+                "size_m": [0.5, 0.5, 0.2],
+            }
+        },
+    )
+    second = ContextOrchestrator(source, state_path)
+    _, resumed_state = second.run()
+
+    assert "vehicle" in resumed_state.candidates
+    assert not any(
+        request.field == "vehicle"
+        for request in second.clarification_requests(resumed_state)
+    )

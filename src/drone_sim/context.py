@@ -28,6 +28,15 @@ from drone_sim.provenance import (
     ValueOrigin,
     material_values,
 )
+from drone_sim.reconstruction import (
+    DEPENDENCY_BY_FIELD,
+    DEPENDENCY_TEMPLATES,
+    ClarificationRequest,
+    EntityLink,
+    evidence_priority,
+    extract_dependency,
+    link_entities,
+)
 from drone_sim.validation import (
     EvaluationProfile,
     HYPOTHESIS_GENERATION_PROFILE,
@@ -51,6 +60,8 @@ class FileRecord(BaseModel):
     path: str
     size_bytes: int = Field(ge=0)
     media_type: str | None = None
+    modified_at: datetime
+    modified_at_ns: int = Field(ge=0)
 
 
 class SemanticRanker(Protocol):
@@ -82,11 +93,14 @@ class DirectoryIndex:
                 path = current_path / name
                 if path.is_symlink() or not path.is_file():
                     continue
+                stat = path.stat()
                 records.append(
                     FileRecord(
                         path=path.relative_to(resolved).as_posix(),
-                        size_bytes=path.stat().st_size,
+                        size_bytes=stat.st_size,
                         media_type=mimetypes.guess_type(path.name)[0],
+                        modified_at=datetime.fromtimestamp(stat.st_mtime, tz=UTC),
+                        modified_at_ns=stat.st_mtime_ns,
                     )
                 )
         return cls(resolved, records)
@@ -97,6 +111,7 @@ class DirectoryIndex:
         *,
         limit: int = 5,
         semantic_ranker: SemanticRanker | None = None,
+        preferred_suffixes: Sequence[str] = (),
     ) -> tuple[FileRecord, ...]:
         query_tokens = _tokens(query)
         lexical: dict[str, float] = {}
@@ -115,10 +130,15 @@ class DirectoryIndex:
                 path: 1.0 / (rank + 1) for rank, path in enumerate(ranked_paths)
             }
 
-        scored = [
-            (lexical.get(record.path, 0) + semantic.get(record.path, 0), record)
-            for record in self.records
-        ]
+        preferred = set(preferred_suffixes)
+        scored = []
+        for record in self.records:
+            score = lexical.get(record.path, 0) + semantic.get(record.path, 0)
+            if Path(record.path).suffix.lower() in preferred:
+                score += 0.2
+            priority, _, _ = evidence_priority(record.path, record.modified_at)
+            score += priority * 0.05
+            scored.append((score, record))
         scored.sort(key=lambda item: (-item[0], item[1].path))
         return tuple(record for score, record in scored if score > 0)[:limit]
 
@@ -159,12 +179,17 @@ class CandidateFact(BaseModel):
     source_path: str
     adapter: str
     source_location: str
+    source_locations: dict[str, str] = Field(default_factory=dict)
     source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     origin: ValueOrigin = ValueOrigin.OBSERVED
     confidence: ConfidenceLevel = ConfidenceLevel.MEDIUM
     uncertainty_basis: str = (
         "Deterministic direct extraction; source semantics are not independently corroborated"
     )
+    source_modified_at: datetime = Field(
+        default_factory=lambda: datetime.fromtimestamp(0, tz=UTC)
+    )
+    relevance_score: float = 0
 
 
 LiteralOutcome = Literal["candidate_extracted", "no_candidate", "unresolved", "parse_error"]
@@ -185,12 +210,15 @@ class InspectionEvent(BaseModel):
 class DeploymentState(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    state_version: str = "0.2.0"
+    state_version: str = "0.3.0"
     root: str
     candidates: dict[str, list[CandidateFact]] = Field(default_factory=dict)
     attempted_fields: set[str] = Field(default_factory=set)
     inspected_paths: set[str] = Field(default_factory=set)
     trace: list[InspectionEvent] = Field(default_factory=list)
+    parsed_sources: dict[str, ParsedSource] = Field(default_factory=dict)
+    index_signatures: dict[str, str] = Field(default_factory=dict)
+    entity_links: list[EntityLink] = Field(default_factory=list)
 
 
 class StateStore:
@@ -226,18 +254,7 @@ class StateStore:
 
 
 FIELD_QUERIES: dict[str, str] = {
-    "deployment_id": "deployment identifier manifest overview",
-    "vehicle": "vehicle aircraft drone uav airframe specification",
-    "payloads": "payload sensor camera cargo specification",
-    "mission": "mission route waypoints flight plan objective",
-    "site": "site environment location map mesh geometry",
-    "conditions": "conditions weather wind visibility temperature",
-    "autonomy": "autonomy controller flight control configuration",
-    "constraints": "constraints limits geofence airspace operations weather",
-    "success_criteria": "success criteria pass threshold metrics",
-    "telemetry": "telemetry flight log historical data",
-    "raw_data": "raw data imagery observations",
-    "models": "models dynamics geometry sensor environment",
+    template.field: template.query for template in DEPENDENCY_TEMPLATES
 }
 
 REQUIRED_FIELDS = {
@@ -279,11 +296,15 @@ class ContextOrchestrator:
 
     def run(self) -> tuple[EvidenceBackedDeployment | None, DeploymentState]:
         state = self.store.load_or_create(self.index.root)
+        self._refresh_index_state(state)
         for field, query in FIELD_QUERIES.items():
             if field in state.candidates or field in state.attempted_fields:
                 continue
             self._resolve(field, query, state)
             self.store.save(state)
+
+        state.entity_links = list(link_entities(state.parsed_sources))
+        self.store.save(state)
 
         if not REQUIRED_FIELDS.issubset(state.candidates):
             return None, state
@@ -313,14 +334,72 @@ class ContextOrchestrator:
         deployment = DeploymentIR.model_validate(values)
         return assess_evidence(self._evidence_backed(deployment, state), profile)
 
+    def clarification_requests(
+        self, state: DeploymentState
+    ) -> tuple[ClarificationRequest, ...]:
+        """Ask the operator only after deterministic evidence search is exhausted."""
+
+        report = self.assess(state)
+        requests: list[ClarificationRequest] = []
+        for path in report.unresolved_paths:
+            field = path.split("/", 2)[1]
+            template = DEPENDENCY_BY_FIELD.get(field)
+            if not template or field not in state.attempted_fields:
+                continue
+            searched = tuple(
+                sorted(
+                    {
+                        event.source_path
+                        for event in state.trace
+                        if event.field == field and event.source_path
+                    }
+                )
+            )
+            requests.append(
+                ClarificationRequest(
+                    field=field,
+                    question=template.clarification_question,
+                    reason=f"Evidence search could not resolve {path}",
+                    searched_paths=searched,
+                )
+            )
+        return tuple(requests)
+
+    def _refresh_index_state(self, state: DeploymentState) -> None:
+        current = {
+            record.path: f"{record.size_bytes}:{record.modified_at_ns}"
+            for record in self.index.records
+        }
+        changed = {
+            path
+            for path in set(current) | set(state.index_signatures)
+            if current.get(path) != state.index_signatures.get(path)
+        }
+        if changed:
+            state.attempted_fields.clear()
+            state.inspected_paths.difference_update(changed)
+            for path in changed:
+                state.parsed_sources.pop(path, None)
+            for field, candidates in list(state.candidates.items()):
+                retained = [
+                    candidate
+                    for candidate in candidates
+                    if candidate.source_path not in changed
+                ]
+                if retained:
+                    state.candidates[field] = retained
+                else:
+                    del state.candidates[field]
+        state.index_signatures = current
+
     def _resolve(self, field: str, query: str, state: DeploymentState) -> None:
         matches = self.index.search(
             query,
-            limit=self.candidates_per_field,
+            limit=max(self.candidates_per_field, len(self.index.records)),
             semantic_ranker=self.semantic_ranker,
+            preferred_suffixes=DEPENDENCY_BY_FIELD[field].preferred_suffixes,
         )
-        unread = [record for record in matches if record.path not in state.inspected_paths]
-        if not unread:
+        if not matches:
             state.attempted_fields.add(field)
             state.trace.append(
                 InspectionEvent(
@@ -334,10 +413,18 @@ class ContextOrchestrator:
             )
             return
 
-        for record in unread:
-            state.inspected_paths.add(record.path)
+        found_candidate = False
+        for record in matches:
+            path_overlap = _tokens(query) & _tokens(record.path)
+            priority = evidence_priority(record.path, record.modified_at)[0]
+            if found_candidate and not path_overlap and priority == 0:
+                break
             try:
-                parsed = self.reader.parse(record.path)
+                parsed = state.parsed_sources.get(record.path)
+                if parsed is None:
+                    parsed = self.reader.parse(record.path)
+                    state.parsed_sources[record.path] = parsed
+                    state.inspected_paths.add(record.path)
                 extracted = self._extract(field, record.path, parsed.content)
                 outcome = "candidate_extracted" if extracted is not None else "no_candidate"
                 state.trace.append(
@@ -352,7 +439,8 @@ class ContextOrchestrator:
                     )
                 )
                 if extracted is not None:
-                    self._record_candidates(record.path, parsed, field, extracted, state)
+                    self._record_candidates(record, parsed, field, extracted, state)
+                    found_candidate = True
             except (OSError, UnicodeError, ValueError, json.JSONDecodeError) as error:
                 state.trace.append(
                     InspectionEvent(
@@ -368,24 +456,29 @@ class ContextOrchestrator:
 
     @staticmethod
     def _record_candidates(
-        source_path: str,
+        record: FileRecord,
         parsed: ParsedSource,
         requested_field: str,
-        extracted: tuple[Any, str],
+        extracted: tuple[Any, str, dict[str, str]],
         state: DeploymentState,
     ) -> None:
-        extracted_value, extracted_location = extracted
-        values = {requested_field: (extracted_value, extracted_location)}
-        if isinstance(parsed.content, dict):
-            values.update(
-                (field, (parsed.content[field], f"/{_escape_pointer(field)}"))
-                for field in FIELD_QUERIES
-                if field in parsed.content
+        extracted_value, extracted_location, extracted_locations = extracted
+        values = {
+            requested_field: (
+                extracted_value,
+                extracted_location,
+                extracted_locations,
             )
-        for field, (value, source_location) in values.items():
+        }
+        if isinstance(parsed.content, dict):
+            for template in DEPENDENCY_TEMPLATES:
+                found = extract_dependency(template, parsed.content)
+                if found:
+                    values[template.field] = found
+        for field, (value, source_location, source_locations) in values.items():
             candidates = state.candidates.setdefault(field, [])
             if any(
-                candidate.source_path == source_path
+                candidate.source_path == record.path
                 and candidate.source_location == source_location
                 for candidate in candidates
             ):
@@ -394,24 +487,38 @@ class ContextOrchestrator:
                 CandidateFact(
                     field=field,
                     value=value,
-                    source_path=source_path,
+                    source_path=record.path,
                     adapter=parsed.adapter,
                     source_location=source_location,
+                    source_locations=source_locations,
                     source_sha256=parsed.sha256,
+                    source_modified_at=record.modified_at,
+                    relevance_score=evidence_priority(
+                        record.path, record.modified_at
+                    )[0],
                 ),
+            )
+            candidates.sort(
+                key=lambda candidate: (
+                    candidate.relevance_score,
+                    candidate.source_modified_at.timestamp(),
+                    candidate.source_path,
+                ),
+                reverse=True,
             )
 
     @staticmethod
     def _extract(
         field: str, source_path: str, content: Any
-    ) -> tuple[Any, str] | None:
+    ) -> tuple[Any, str, dict[str, str]] | None:
         if not isinstance(content, dict):
             return None
-        if field in content:
-            return content[field], f"/{_escape_pointer(field)}"
+        found = extract_dependency(DEPENDENCY_BY_FIELD[field], content)
+        if found:
+            return found
         stem = Path(source_path).stem
         if _tokens(stem) == _tokens(field):
-            return content, ""
+            return content, "", {}
         return None
 
     @staticmethod
@@ -469,7 +576,9 @@ def _value_at_pointer(value: Any, pointer: str) -> Any:
 def _leaf_candidate(
     candidate: CandidateFact, deployment_path: str, relative_path: str, value: Any
 ) -> EvidenceCandidate:
-    source_location = candidate.source_location + relative_path
+    source_location = candidate.source_locations.get(
+        relative_path, candidate.source_location + relative_path
+    )
     identity = "\0".join(
         (candidate.source_sha256, source_location, deployment_path, repr(value))
     )

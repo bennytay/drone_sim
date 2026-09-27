@@ -47,6 +47,11 @@ DOCX, KML, drone telemetry containers, meshes/point clouds, and image/video
 metadata. Large streams and binary assets are hashed and summarized; their raw
 contents never enter the agent-facing parsed result.
 
+Reconstruction uses reusable dependency templates, canonical aliases, ranked
+current-versus-stale evidence, cached parsed summaries, and cross-file entity
+links. If exhaustive evidence search still leaves a material gap, the CLI
+returns targeted clarification requests alongside the readiness report.
+
 Before output, the CLI applies the drone hypothesis-generation readiness
 profile. Missing dependencies, invalid values or units, uncertainty below the
 profile threshold, and unresolved conflicts produce a structured readiness
@@ -59,3 +64,5 @@ schema boundary and [Provenance and uncertainty](docs/provenance-v0.1.md) for
 the evidence contract. See [Completeness validation](docs/validation-v0.1.md)
 for readiness thresholds and conflict handling, and
 [Source adapters](docs/source-adapters-v0.1.md) for bounded parsing contracts.
+The broader search and linking loop is documented in
+[Context reconstruction](docs/context-reconstruction-v0.1.md).

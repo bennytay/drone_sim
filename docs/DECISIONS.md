@@ -161,3 +161,23 @@ parser.
 **Revisit when:** A material drone evaluation requires random access to a
 specific time-series or geometry payload. Add a typed selective-query method or
 specialized deterministic decoder while retaining bounded agent-facing output.
+
+## ADR-012: Dependency-driven reconstruction with deferred clarification
+
+**Decision:** Reconstruct messy drone deployment folders using reusable
+dependency templates, deterministic aliases, ranked evidence, cached parsed
+summaries, and identifier-based entity links. Prefer sources marked current,
+approved, final, release, or signed over stale/archive signals, but preserve all
+competing values for conflict validation. Ask the operator only after the
+bounded evidence search is exhausted.
+
+**Rationale:** Operator folders rarely follow one naming convention. Encoding a
+curated layout would silently miss evidence, while indiscriminate reading would
+waste context and make behavior irreproducible. Templates expose why a file was
+sought; deterministic normalization preserves provenance; cache invalidation
+supports repeated analysis; and targeted clarification keeps missing evidence
+visible without making manual data entry the primary UX.
+
+**Revisit when:** Real deployment corpora justify learned relevance or entity
+matching. Learned ranking may augment these deterministic records, but cannot
+replace traceable source selection, conflict preservation, or stopping rules.

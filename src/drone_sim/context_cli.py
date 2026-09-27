@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 
 from drone_sim.context import ContextOrchestrator
@@ -20,7 +21,17 @@ def main() -> None:
     evidence, state = orchestrator.run()
     assessment = orchestrator.assess(state)
     if evidence is None or not assessment.ready:
-        raise SystemExit(assessment.model_dump_json(indent=2))
+        report = {
+            "readiness": assessment.model_dump(mode="json"),
+            "clarification_requests": [
+                request.model_dump(mode="json")
+                for request in orchestrator.clarification_requests(state)
+            ],
+            "entity_links": [
+                link.model_dump(mode="json") for link in state.entity_links
+            ],
+        }
+        raise SystemExit(json.dumps(report, indent=2))
 
     rendered = evidence.model_dump_json(indent=2) + "\n"
     if args.output:
