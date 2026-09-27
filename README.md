@@ -42,6 +42,14 @@ and stable lineage IDs for every populated scalar Deployment IR field. An
 optional semantic ranker can augment the built-in lexical search without
 receiving file contents.
 
+Before output, the CLI applies the drone hypothesis-generation readiness
+profile. Missing dependencies, invalid values or units, uncertainty below the
+profile threshold, and unresolved conflicts produce a structured readiness
+report instead of silently becoming simulation inputs. Library callers can
+define additional `EvaluationProfile` contracts for geometry, wind, energy,
+perception, or other drone evaluation classes.
+
 See [Deployment IR v0.1 design](docs/deployment-ir-v0.1.md) for the canonical
 schema boundary and [Provenance and uncertainty](docs/provenance-v0.1.md) for
-the evidence contract.
+the evidence contract. See [Completeness validation](docs/validation-v0.1.md)
+for readiness thresholds and conflict handling.
