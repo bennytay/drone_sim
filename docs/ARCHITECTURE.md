@@ -57,6 +57,15 @@ scenario generation and reporting to retain the complete lineage. Envelope
 validation rejects missing coverage, mismatched selected values, dangling
 references, and derivation cycles.
 
+A deterministic completeness validator evaluates that envelope against a typed
+drone evaluation profile. It reports resolved and missing dependencies,
+out-of-range or non-canonical values, insufficient confidence, and competing
+candidates. Its terminal state is one of `ready`, `incomplete`, `uncertain`,
+`conflicting`, or `invalid`. A contradiction remains blocking until a
+resolution record accounts for the selected and rejected candidates. This
+gives the context agent a repeatable “what is unresolved?” query and prevents
+hypothesis generation or testing before its declared context threshold is met.
+
 ### Failure hypothesis engine
 
 The hypothesis engine maps grounded deployment context to plausible failure

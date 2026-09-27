@@ -124,3 +124,22 @@ a written basis avoids implying that uncalibrated scores are probabilities.
 implementations, or evidence shows JSON Pointer identity is unstable across
 required schema migrations. Any replacement must retain complete coverage,
 conflicts, assumptions, and derivation lineage.
+
+## ADR-010: Evaluation-specific deterministic readiness thresholds
+
+**Decision:** Assess context completeness against a typed evaluation profile
+whose dependencies and minimum confidence are explicit. Return one of `ready`,
+`incomplete`, `uncertain`, `conflicting`, or `invalid`. Do not automatically
+resolve contradictory values: require an auditable resolution method, selected
+candidate, complete rejected-candidate set, and rationale. Source adapters must
+convert common non-SI aviation units into canonical Deployment IR units.
+
+**Rationale:** A deployment can be complete enough for hypothesis generation
+but not for a wind, energy, geometry, or perception evaluation. One universal
+completeness flag would either block useful investigation or admit unsupported
+tests. Explicit profiles make the stopping condition reproducible, while
+structured findings tell the context agent exactly what evidence to seek next.
+
+**Revisit when:** Real drone evaluations show stable dependency families that
+should become a versioned registry, or calibrated uncertainty supports more
+precise thresholds without creating false confidence.

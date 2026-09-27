@@ -16,10 +16,11 @@ def main() -> None:
     args = parser.parse_args()
 
     state_path = args.state or args.root.parent / f"{args.root.name}.state.json"
-    evidence, state = ContextOrchestrator(args.root, state_path).run()
-    if evidence is None:
-        missing = sorted(set(("deployment_id", "vehicle", "mission", "site", "autonomy", "success_criteria")) - state.candidates.keys())
-        raise SystemExit(f"Deployment IR incomplete; missing: {', '.join(missing)}")
+    orchestrator = ContextOrchestrator(args.root, state_path)
+    evidence, state = orchestrator.run()
+    assessment = orchestrator.assess(state)
+    if evidence is None or not assessment.ready:
+        raise SystemExit(assessment.model_dump_json(indent=2))
 
     rendered = evidence.model_dump_json(indent=2) + "\n"
     if args.output:

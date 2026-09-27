@@ -91,7 +91,7 @@ def test_orchestrator_reconstructs_ir_without_reading_irrelevant_file(tmp_path: 
     assert mass.selected.value == 2.4
     assert mass.selected.sources[0].source_path == "aircraft_vehicle.json"
     assert mass.selected.sources[0].locator == "/vehicle/mass_kg"
-    assert mass.selected.uncertainty.confidence == "unknown"
+    assert mass.selected.uncertainty.confidence == "medium"
     assert "irrelevant_notes.txt" not in state.inspected_paths
     assert state_path.exists()
     assert all(event.reason for event in state.trace)
@@ -150,6 +150,44 @@ def test_orchestrator_preserves_competing_candidate_values(tmp_path: Path) -> No
     assert mass.selected.value == 2.4
     assert [candidate.value for candidate in mass.competing] == [2.7]
     assert len(state.candidates["vehicle"]) == 2
+    assessment = ContextOrchestrator(
+        source, tmp_path / "conflict-state.json"
+    ).assess(state)
+    assert assessment.status == "conflicting"
+    assert "/vehicle/mass_kg" in assessment.unresolved_paths
+
+
+def test_assessment_reports_missing_dependencies_and_invalid_values(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "deployment"
+    source.mkdir()
+    write_json(source, "deployment_manifest.json", {"deployment_id": "demo-001"})
+    orchestrator = ContextOrchestrator(source, tmp_path / "state.json")
+
+    evidence, state = orchestrator.run()
+    report = orchestrator.assess(state)
+
+    assert evidence is None
+    assert report.status == "incomplete"
+    assert "/vehicle/airframe" in report.unresolved_paths
+
+
+def test_assessment_reports_invalid_ranges(tmp_path: Path) -> None:
+    source = tmp_path / "deployment"
+    make_curated_folder(source)
+    vehicle_path = source / "aircraft_vehicle.json"
+    vehicle = json.loads(vehicle_path.read_text())
+    vehicle["vehicle"]["mass_kg"] = -1
+    vehicle_path.write_text(json.dumps(vehicle))
+    orchestrator = ContextOrchestrator(source, tmp_path / "invalid-state.json")
+
+    evidence, state = orchestrator.run()
+    report = orchestrator.assess(state)
+
+    assert evidence is None
+    assert report.status == "invalid"
+    assert "/vehicle/mass_kg" in report.unresolved_paths
 
 
 def test_state_must_be_outside_read_only_root(tmp_path: Path) -> None:

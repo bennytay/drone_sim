@@ -14,7 +14,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Literal, Protocol, Sequence
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from drone_sim.ir import DeploymentIR
 from drone_sim.provenance import (
@@ -28,6 +28,13 @@ from drone_sim.provenance import (
     Uncertainty,
     ValueOrigin,
     material_values,
+)
+from drone_sim.validation import (
+    EvaluationProfile,
+    HYPOTHESIS_GENERATION_PROFILE,
+    ReadinessReport,
+    assess_evidence,
+    assess_values,
 )
 
 
@@ -167,8 +174,10 @@ class CandidateFact(BaseModel):
     source_location: str
     source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     origin: ValueOrigin = ValueOrigin.OBSERVED
-    confidence: ConfidenceLevel = ConfidenceLevel.UNKNOWN
-    uncertainty_basis: str = "Source supplied no calibrated confidence information"
+    confidence: ConfidenceLevel = ConfidenceLevel.MEDIUM
+    uncertainty_basis: str = (
+        "Deterministic direct extraction; source semantics are not independently corroborated"
+    )
 
 
 LiteralOutcome = Literal["candidate_extracted", "no_candidate", "unresolved", "parse_error"]
@@ -294,8 +303,28 @@ class ContextOrchestrator:
 
         values = dict(DEFAULTS)
         values.update({key: facts[0].value for key, facts in state.candidates.items()})
-        deployment = DeploymentIR.model_validate(values)
+        try:
+            deployment = DeploymentIR.model_validate(values)
+        except ValidationError:
+            return None, state
         return self._evidence_backed(deployment, state), state
+
+    def assess(
+        self,
+        state: DeploymentState,
+        profile: EvaluationProfile = HYPOTHESIS_GENERATION_PROFILE,
+    ) -> ReadinessReport:
+        """Answer what remains unresolved for a concrete evaluation class."""
+
+        values = dict(DEFAULTS)
+        values.update(
+            {key: facts[0].value for key, facts in state.candidates.items() if facts}
+        )
+        preliminary = assess_values(values, profile)
+        if not preliminary.ready:
+            return preliminary
+        deployment = DeploymentIR.model_validate(values)
+        return assess_evidence(self._evidence_backed(deployment, state), profile)
 
     def _resolve(self, field: str, query: str, state: DeploymentState) -> None:
         matches = self.index.search(

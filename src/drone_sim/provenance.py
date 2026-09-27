@@ -68,6 +68,22 @@ class Assumption(StrictModel):
     rationale: str = Field(min_length=1)
 
 
+class ResolutionMethod(StrEnum):
+    SOURCE_PRIORITY = "source_priority"
+    CONSERVATIVE_VALUE = "conservative_value"
+    OPERATOR_DECISION = "operator_decision"
+    EQUIVALENT_VALUES = "equivalent_values"
+
+
+class ConflictResolution(StrictModel):
+    """Auditable selection among contradictory evidence candidates."""
+
+    method: ResolutionMethod
+    selected_candidate_id: str = Field(min_length=1)
+    rejected_candidate_ids: tuple[str, ...] = Field(min_length=1)
+    rationale: str = Field(min_length=1)
+
+
 class EvidenceCandidate(StrictModel):
     """One possible value and the evidence chain supporting it."""
 
@@ -99,12 +115,21 @@ class MaterialFact(StrictModel):
     path: str = Field(pattern=r"^/")
     selected: EvidenceCandidate
     competing: tuple[EvidenceCandidate, ...] = ()
+    resolution: ConflictResolution | None = None
 
     @model_validator(mode="after")
     def candidates_are_distinct(self) -> "MaterialFact":
         ids = [self.selected.id, *(candidate.id for candidate in self.competing)]
         if len(ids) != len(set(ids)):
             raise ValueError("candidate IDs must be unique within a material fact")
+        if self.resolution:
+            if not self.competing:
+                raise ValueError("conflict resolution requires competing candidates")
+            if self.resolution.selected_candidate_id != self.selected.id:
+                raise ValueError("conflict resolution must select the material fact value")
+            competing_ids = {candidate.id for candidate in self.competing}
+            if set(self.resolution.rejected_candidate_ids) != competing_ids:
+                raise ValueError("conflict resolution must account for every competitor")
         return self
 
 

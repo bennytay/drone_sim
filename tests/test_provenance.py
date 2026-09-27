@@ -38,7 +38,7 @@ def source_candidate(identifier: str, value: object) -> EvidenceCandidate:
         ),
         extraction=ExtractionMethod(name="json", version="1"),
         uncertainty=Uncertainty(
-            confidence=ConfidenceLevel.UNKNOWN,
+            confidence=ConfidenceLevel.MEDIUM,
             basis="The source does not state a calibrated confidence",
         ),
     )
