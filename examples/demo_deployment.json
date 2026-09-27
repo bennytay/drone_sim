@@ -1,0 +1,148 @@
+{
+  "schema_version": "0.1.0",
+  "deployment_id": "warehouse-roof-inspection-001",
+  "vehicle": {
+    "id": "inspection-uav-01",
+    "airframe": "multirotor",
+    "manufacturer": "Example Aerospace",
+    "model": "Surveyor X",
+    "mass_kg": 4.2,
+    "max_takeoff_mass_kg": 6.0,
+    "dimensions_m": [0.85, 0.85, 0.42],
+    "max_speed_mps": 15.0,
+    "max_wind_speed_mps": 10.0,
+    "model_refs": []
+  },
+  "payloads": [
+    {
+      "id": "rgb-camera-01",
+      "kind": "rgb_camera",
+      "mass_kg": 0.32,
+      "dimensions_m": [0.11, 0.09, 0.08],
+      "model_refs": []
+    }
+  ],
+  "mission": {
+    "name": "North roof inspection",
+    "objective": "Capture complete imagery of the north warehouse roof",
+    "route": {
+      "points": [
+        {
+          "id": "takeoff",
+          "position": {
+            "latitude_deg": -33.8688,
+            "longitude_deg": 151.2093,
+            "altitude_m": 0.0,
+            "altitude_reference": "above_ground"
+          },
+          "acceptance_radius_m": 1.5,
+          "target_speed_mps": 2.0,
+          "action": "takeoff"
+        },
+        {
+          "id": "roof-north-west",
+          "position": {
+            "latitude_deg": -33.8685,
+            "longitude_deg": 151.2091,
+            "altitude_m": 24.0,
+            "altitude_reference": "above_ground"
+          },
+          "acceptance_radius_m": 2.0,
+          "target_speed_mps": 5.0,
+          "action": "capture_imagery"
+        }
+      ],
+      "source": {
+        "id": "planned-route",
+        "uri": "route/inspection.geojson",
+        "role": "route",
+        "media_type": "application/geo+json"
+      }
+    },
+    "planned_start": "2026-10-01T23:00:00Z",
+    "planned_duration_s": 900
+  },
+  "site": {
+    "name": "Alexandria warehouse",
+    "reference_point": {
+      "latitude_deg": -33.8688,
+      "longitude_deg": 151.2093,
+      "altitude_m": 12.0,
+      "altitude_reference": "mean_sea_level"
+    },
+    "artifacts": [
+      {
+        "id": "site-mesh",
+        "uri": "site/warehouse.glb",
+        "role": "site_model",
+        "media_type": "model/gltf-binary"
+      }
+    ]
+  },
+  "conditions": {
+    "observed_at": "2026-10-01T22:30:00Z",
+    "temperature_c": 19.0,
+    "wind_speed_mps": 6.5,
+    "wind_direction_deg": 170,
+    "precipitation_mm_h": 0,
+    "visibility_m": 10000,
+    "artifacts": []
+  },
+  "autonomy": {
+    "mode": "supervised_autonomous",
+    "controller": "waypoint_follower",
+    "version": "1.4.0",
+    "config": {
+      "id": "controller-config",
+      "uri": "config/controller.json",
+      "role": "controller_config",
+      "media_type": "application/json"
+    }
+  },
+  "constraints": [
+    {
+      "id": "wind-limit",
+      "category": "weather",
+      "description": "Do not operate above the approved steady wind speed",
+      "value": 10,
+      "unit": "m/s"
+    }
+  ],
+  "success_criteria": [
+    {
+      "id": "route-completion",
+      "metric": "route_completion_ratio",
+      "operator": "gte",
+      "target": 0.98
+    },
+    {
+      "id": "minimum-clearance",
+      "metric": "obstacle_clearance_m",
+      "operator": "gte",
+      "target": 3.0,
+      "unit": "m"
+    }
+  ],
+  "telemetry": [
+    {
+      "id": "reference-flight-log",
+      "uri": "telemetry/reference-flight.csv",
+      "role": "telemetry",
+      "media_type": "text/csv"
+    }
+  ],
+  "raw_data": [],
+  "models": [
+    {
+      "id": "warehouse-geometry",
+      "purpose": "geometry",
+      "artifact": {
+        "id": "collision-mesh",
+        "uri": "models/warehouse-collision.glb",
+        "role": "site_model",
+        "media_type": "model/gltf-binary"
+      },
+      "format": "glTF 2.0"
+    }
+  ]
+}
