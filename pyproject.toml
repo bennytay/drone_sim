@@ -18,6 +18,7 @@ deployment-evidence-schema = "drone_sim.evidence_schema:main"
 deployment-context = "drone_sim.context_cli:main"
 drone-eval = "drone_sim.golden_path:main"
 drone-llm-smoke = "drone_sim.llm_cli:main"
+drone-llm-eval = "drone_sim.llm_eval_cli:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
