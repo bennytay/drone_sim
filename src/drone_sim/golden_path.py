@@ -26,11 +26,8 @@ from drone_sim.coverage import ApplicabilityStatus, CoverageMap, assess_coverage
 from drone_sim.graph import EvaluationGoal
 from drone_sim.hypothesis import HypothesisGenerationContract
 from drone_sim.hypothesis import HypothesisStatus
-from drone_sim.investigation import (
-    InvestigationAction,
-    InvestigationState,
-    next_action,
-)
+from drone_sim.investigation import InvestigationAction, InvestigationState
+from drone_sim.investigation_loop import InvestigationTrace, run_investigation
 from drone_sim.ir import Constraint, DeploymentIR
 from drone_sim.llm import LLMError
 from drone_sim.provenance import EvidenceBackedDeployment
@@ -43,6 +40,7 @@ from drone_sim.routing import (
     FidelityRouter,
     RoutingOutcome,
 )
+from drone_sim.stopping import StopPolicy
 from drone_sim.validation import ReadinessReport
 
 
@@ -85,6 +83,7 @@ class GoldenPathResult:
     hypotheses: HypothesisGenerationContract | None = None
     hypotheses_path: Path | None = None
     first_action: InvestigationAction | None = None
+    investigation: InvestigationTrace | None = None
     runs: tuple[HypothesisRun, ...] = ()
     artifacts: list[Path] = field(default_factory=list)
 
@@ -240,23 +239,18 @@ def run_golden_path(
         hypotheses_path.read_text()
     )
     _write(result, "hypotheses.json", result.hypotheses)
-    result.first_action = next_action(
-        InvestigationState(
-            hypotheses=result.hypotheses.hypotheses, coverage=result.coverage
-        )
-    )
-
     # Stages 6-8: planning, execution, fidelity routing (production code),
     # with thresholds bound by the demo wiring above.
     registry, tools = builtin_toolbox()
     router = FidelityRouter(registry, tools)
     context = operating_context(evaluation_deployment)
-    runs = []
-    for hypothesis in result.hypotheses.hypotheses:
-        if hypothesis.status in {HypothesisStatus.REJECTED, HypothesisStatus.MERGED}:
-            continue
+    runs: list[HypothesisRun] = []
+
+    def route_hypothesis(hypothesis, _action):
         goal = EvaluationGoal.for_hypothesis(hypothesis)
-        thresholds = bind_thresholds(deployment, goal.measures, usable_energy_wh=usable_energy_wh)
+        thresholds = bind_thresholds(
+            deployment, goal.measures, usable_energy_wh=usable_energy_wh
+        )
         outcome = router.investigate(
             goal,
             context,
@@ -273,7 +267,25 @@ def run_golden_path(
             )
         )
         _write(result, f"routing/{hypothesis.id}.json", outcome)
+        return outcome
+
+    active_hypotheses = tuple(
+        hypothesis
+        for hypothesis in result.hypotheses.hypotheses
+        if hypothesis.status not in {HypothesisStatus.REJECTED, HypothesisStatus.MERGED}
+    )
+    _investigation_state, result.investigation = run_investigation(
+        InvestigationState(hypotheses=active_hypotheses, coverage=result.coverage),
+        route=route_hypothesis,
+        policy=StopPolicy(max_actions=max(1, len(active_hypotheses)), min_novelty=0.0),
+    )
+    result.first_action = (
+        result.investigation.actions[0] if result.investigation.actions else None
+    )
+    result.coverage = _investigation_state.coverage
     result.runs = tuple(runs)
+    _write(result, "coverage.json", result.coverage)
+    _write(result, "investigation.json", result.investigation)
     return result
 
 

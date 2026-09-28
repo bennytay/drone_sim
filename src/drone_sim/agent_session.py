@@ -39,8 +39,7 @@ from drone_sim.llm import (
     StructuredOutputRunner,
 )
 from drone_sim.hypothesis_generator import HypothesisProposalBatch, generate_hypotheses
-from drone_sim.investigation import InvestigationState, ResultKind, TestResult
-from drone_sim.investigation_loop import InvestigationTrace, advance
+from drone_sim.investigation_loop import InvestigationTrace
 from drone_sim.knowledge_retrieval import retrieve_knowledge
 from drone_sim.llm_safety import DeploymentLLMPolicy, prepare_untrusted_text
 from drone_sim.llm_ledger import (
@@ -470,35 +469,12 @@ def run_agent_session(
     else:
         summary = draft_summary
 
-    investigation: InvestigationTrace | None = None
-    if result.coverage is not None:
-        investigation = InvestigationTrace()
-        investigation_state = InvestigationState(
-            hypotheses=reviewed.hypotheses, coverage=result.coverage
-        )
-        investigation_state, investigation = advance(investigation_state, investigation)
-        for run in result.runs:
-            kind = (
-                ResultKind.PASS
-                if run.outcome.final.decision.value == "accept"
-                else ResultKind.INCONCLUSIVE
-            )
-            investigation_state, investigation = advance(
-                investigation_state,
-                investigation,
-                TestResult(
-                    hypothesis_id=run.hypothesis_id,
-                    kind=kind,
-                    summary=_verdict_line(run),
-                    fidelity=len(run.outcome.steps) - 1,
-                ),
-            )
     state = AgentSessionState(
         root=str(root),
         events=tuple(events),
         questions=questions,
         summary=summary,
-        investigation=investigation,
+        investigation=result.investigation,
         document_candidates=document_candidates,
         completed=not result.stopped_at_context,
     )
