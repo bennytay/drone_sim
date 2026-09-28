@@ -1,12 +1,20 @@
 """Drone deployment verification primitives."""
 
+from drone_sim.capabilities import (
+    DEFAULT_CAPABILITY_ONTOLOGY,
+    DEFAULT_MECHANISM_CAPABILITIES,
+    CapabilityOntology,
+)
 from drone_sim.failure_taxonomy import DEFAULT_FAILURE_TAXONOMY, FailureTaxonomy
 from drone_sim.ir import DeploymentIR
 from drone_sim.provenance import EvidenceBackedDeployment
 from drone_sim.validation import ReadinessReport
 
 __all__ = [
+    "DEFAULT_CAPABILITY_ONTOLOGY",
+    "DEFAULT_MECHANISM_CAPABILITIES",
     "DEFAULT_FAILURE_TAXONOMY",
+    "CapabilityOntology",
     "DeploymentIR",
     "EvidenceBackedDeployment",
     "FailureTaxonomy",

@@ -13,6 +13,11 @@ fault-tree leaves carry causal variables, observable outcomes, and required
 Deployment IR context while keeping deployment applicability and deterministic
 pass/fail judgments separate.
 
+Each taxonomy mechanism is expressed as a minimum set of canonical
+capabilities, such as route energy demand or trajectory clearance, drawn from a
+tool-independent capability ontology. Capabilities declare typed inputs,
+outputs, and measures but never name a simulator or vendor model.
+
 ## Development
 
 ```bash
@@ -72,7 +77,9 @@ for readiness thresholds and conflict handling, and
 The broader search and linking loop is documented in
 [Context reconstruction](docs/context-reconstruction-v0.1.md). See
 [Failure taxonomy v0.1](docs/failure-taxonomy-v0.1.md) for the discovery
-surface and its product boundary.
+surface and its product boundary, and
+[Capability ontology v0.1](docs/capability-ontology-v0.1.md) for how
+hypotheses become capability requirements.
 
 ## Synthetic QA corpus
 
