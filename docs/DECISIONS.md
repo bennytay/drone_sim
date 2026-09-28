@@ -443,3 +443,21 @@ that deterministic code verifies against source bytes.
 **Rationale:** Operator-provided documents can contain prompt injection. This
 boundary prevents their prose from becoming system authority while preserving
 traceable, limited evidence proposals for later deterministic review.
+
+## ADR-027: LLM applicability rules require explicit human approval
+
+**Decision:** Let the LLM propose only versioned, deployment-bound typed
+`EvidencePredicate` applicability rules for existing drone-taxonomy leaves.
+Keep conservative baseline profiles unchanged. Merge proposals into a complete
+profile set only after a named operator explicitly confirms a review; execute
+the resulting rules exclusively in deterministic coverage code.
+
+**Rationale:** Applicability can reduce the work that needs investigation, so
+an unreviewed model suggestion must not silently hide a drone deployment risk.
+The review record, taxonomy/deployment binding, and complete retained baseline
+profiles make rule-outs auditable while preserving the distinction between a
+ruled-out mechanism and missing evidence.
+
+**Revisit when:** Validated domain rule sources and comparison-between-IR-path
+predicates can express reviewed rules more directly without weakening the
+human approval and deterministic evaluation boundary.

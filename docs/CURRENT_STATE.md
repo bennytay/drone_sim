@@ -5,8 +5,8 @@ derived from reading the code and running it, not from design documents.
 Intended behavior lives in [`ARCHITECTURE.md`](ARCHITECTURE.md#intended-architecture);
 when the two disagree, this file describes reality.
 
-- **Audited at:** `d5554ba` plus the BEN-79 completion-gate change.
-- **Test suite at audit:** 192 passing (`uv run pytest`).
+- **Audited at:** BEN-76 applicability-rule review work (pending merge).
+- **Test suite at audit:** 198 passing (`uv run pytest`).
 - **See it run:** [`DEMO.md`](DEMO.md). **Test layers:** [`TESTING.md`](TESTING.md).
 
 Legend: ✅ implemented and working · 🟡 partial · ⚪ planned / not
@@ -38,7 +38,7 @@ readiness report. Replay mode requires no API key; live mode reads
 | Provenance and uncertainty | ✅ | `provenance.py`, `evidence_schema.py` | `test_provenance.py` |
 | Conflict and completeness validation | ✅ detection + operator-confirmed resolution | `validation.py`, `conflict_assistant.py` | `test_validation.py`, `test_context.py`, `test_conflict_assistant.py` |
 | Failure taxonomy | ✅ | `failure_taxonomy.py` | `test_failure_taxonomy.py` |
-| Applicability / coverage map | 🟡 | `coverage.py` | `test_coverage.py` |
+| Applicability / coverage map | ✅ reviewed rule profiles | `coverage.py`, `applicability_assistant.py` | `test_coverage.py`, `test_applicability_assistant.py` |
 | Hypothesis contract | ✅ | `hypothesis.py` | `test_hypothesis.py` |
 | LLM provider edge + call ledger | ✅ | `llm.py`, `llm_ledger.py`, `llm_cli.py` | `test_llm.py`, `test_llm_ledger.py` |
 | LLM safety boundary | ✅ | `llm_safety.py` | `test_llm_safety.py` |
@@ -202,18 +202,28 @@ All paths are under `src/drone_sim/` unless stated.
   outcomes, and the IR paths it needs.
 - **Where:** `failure_taxonomy.py`. **Test:** `uv run pytest tests/test_failure_taxonomy.py`
 
-### Applicability / coverage map — 🟡
+### Applicability / coverage map — ✅ reviewed rule profiles
 
 - **What it does:** `assess_coverage(deployment)` evaluates each mechanism
-  as `applies`, `ruled_out`, or `unknown` from deterministic predicates. It
-  records the evidence and keeps a residual `taxonomy_gap` risk.
-- **Where:** `coverage.py`. **Called by:** `golden_path.py`, tests.
-- **Test:** `uv run pytest tests/test_coverage.py`
-- **Limitations:** the only profiles are `default_profiles()`. These say "applies if
-  every required IR path exists", so a complete IR makes nearly everything
-  apply: the demo gives 31 of 32. Nothing yet rules a mechanism out on
-  deployment facts (for example, no precipitation means precipitation is ruled
-  out). Materiality and testability come from substring heuristics on the ID.
+  as `applies`, `ruled_out`, or `unknown` from deterministic predicates. The
+  LLM edge can produce a versioned `ApplicabilityProposalBatch`, but it cannot
+  affect coverage until `approve_applicability_rules` receives an explicit,
+  named operator confirmation. Approval creates a complete,
+  deployment-bound `ReviewedApplicabilityProfiles`; evaluation remains in
+  `coverage.py`. Missing evidence stays `unknown`, never `ruled_out`.
+- **Where:** `coverage.py`, `applicability_assistant.py`. **Called by:**
+  library clients and tests; the Golden Path retains conservative defaults
+  until an operator supplies reviewed profiles.
+- **Test:** `uv run pytest tests/test_coverage.py tests/test_applicability_assistant.py`
+- **Demo/corpus evidence:** replayed reviewed proposals rule out nominal
+  steady-wind, visibility, and precipitation mechanisms in the demo IR and
+  ready synthetic corpus while retaining the demo's energy, mass, and
+  static-clearance mechanisms as applicable.
+- **Limitations:** `drone-eval agent` has no review-file UX yet, so it always
+  writes the conservative default coverage map (31 applies, 1 unknown for the
+  demo). Proposal predicates use fixed canonical values because comparisons
+  between two IR paths are not yet a predicate type. Materiality and
+  testability still come from substring heuristics on the ID.
 
 ### Hypothesis contract and generation — ✅ grounded typed edge
 

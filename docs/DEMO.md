@@ -117,8 +117,12 @@ Files written to `work/demo_deployment/` (git-ignored):
    exists to reason about failures (`ready`, `incomplete`, `uncertain`,
    `conflicting`, or `invalid`). This is **not** deployment readiness.
 4. **Applicability.** Evaluates the 32-mechanism drone failure taxonomy
-   against the IR. Today a mechanism "applies" whenever its required IR
-   sections exist.
+   against the IR. The CLI deliberately uses conservative context-exists
+   defaults. A replayed or hosted LLM may separately propose typed,
+   deployment-bound rule changes, but an explicit named operator review is
+   required before those profiles can affect deterministic coverage. The
+   component demo rules out nominal steady-wind, visibility, and precipitation
+   risks without removing the energy, mass, or clearance mechanisms.
 5. **Hypotheses.** Specific, falsifiable concerns tied to a mechanism and
    deployment evidence. The demo uses an offline replay proposal set, which
    can be accepted or rejected through an answers file before investigation.
@@ -136,7 +140,7 @@ Files written to `work/demo_deployment/` (git-ignored):
 | Stage | Real code | Stand-in | Missing |
 |---|---|---|---|
 | Discovery, IR, provenance, readiness gate | ✅ | — | LLM ranking, conflict resolution UX |
-| Applicability map | ✅ | — | deployment-specific rule-out profiles |
+| Applicability map | ✅ deterministic profiles + reviewed LLM proposals | CLI review-file UX |
 | Hypotheses | typed generator, validation, review, and investigation policy | recorded provider response in CI | hosted run is opt-in |
 | Capability selection and planning | ✅ `GraphPlanner` | — | — |
 | Models | ✅ rule conversion, momentum-theory energy | — | site-geometry provider, calibrated models, Isaac |

@@ -106,7 +106,7 @@ resolution record accounts for the selected and rejected candidates. This
 gives the context agent a repeatable “what is unresolved?” query and prevents
 hypothesis generation or testing before its declared context threshold is met.
 
-#### Failure hypothesis engine — current status: 🟡 taxonomy, coverage, contract · ⚪ generator
+#### Failure hypothesis engine — current status: ✅ taxonomy, reviewed coverage, contract, and grounded replay/live generator
 
 The hypothesis engine maps grounded deployment context to plausible failure
 mechanisms. LLMs may propose, refine, and prioritize hypotheses, but each
@@ -304,7 +304,8 @@ Evidence-backed Deployment IR                            ✅  ir.py, provenance.
 Context readiness gate (drone_hypothesis_generation_v1)  ✅  validation.py
   │  operator-confirmed conflicts/clarifications can be persisted before retry
   ▼
-Failure taxonomy + applicability map                     🟡  failure_taxonomy.py ✅, coverage.py 🟡 (context-exists rules only)
+Failure taxonomy + applicability map                     ✅  failure_taxonomy.py, coverage.py, applicability_assistant.py
+  │  conservative defaults; replay/live typed rules require named human approval
   │
   ▼
 Document extraction (typed replay/live LLM edge)         🟡  document_extraction.py + exact quote validation
@@ -362,7 +363,7 @@ adapters ◄── reconstruction ◄── context ◄── context_cli, golde
 provenance ◄── context, validation, routing, trust
 validation ◄── context
 failure_taxonomy ◄── capabilities, coverage, hypothesis
-coverage ◄── hypothesis, investigation, stopping
+coverage ◄── applicability_assistant, hypothesis, investigation, stopping
 capabilities ◄── registry, interfaces, graph, routing
 registry ◄── interfaces, reference_tools, graph, trust, routing
 interfaces ◄── reference_tools, graph, routing

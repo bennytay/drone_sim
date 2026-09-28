@@ -212,14 +212,20 @@ def _assess(
     if observed is None:
         return EvidenceAssessment(predicate=predicate, result=None)
     try:
-        result = {
-            Comparison.EQUALS: observed == predicate.value,
-            Comparison.IN: observed in predicate.value,
-            Comparison.GT: observed > predicate.value,
-            Comparison.GTE: observed >= predicate.value,
-            Comparison.LT: observed < predicate.value,
-            Comparison.LTE: observed <= predicate.value,
-        }[predicate.comparison]
+        if predicate.comparison == Comparison.EQUALS:
+            result = observed == predicate.value
+        elif predicate.comparison == Comparison.IN:
+            result = observed in predicate.value
+        elif predicate.comparison == Comparison.GT:
+            result = observed > predicate.value
+        elif predicate.comparison == Comparison.GTE:
+            result = observed >= predicate.value
+        elif predicate.comparison == Comparison.LT:
+            result = observed < predicate.value
+        elif predicate.comparison == Comparison.LTE:
+            result = observed <= predicate.value
+        else:  # pragma: no cover - exhaustive over the closed Comparison enum.
+            raise ValueError(f"unsupported comparison: {predicate.comparison}")
     except TypeError:
         result = False
     return EvidenceAssessment(
