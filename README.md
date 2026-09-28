@@ -29,6 +29,11 @@ regions, fidelity, errors, cost, runtime mode, and reproducibility, so the
 planner can compare an analytical model, empirical fit, geometry engine,
 simulator, or opaque customer model programmatically.
 
+Providers compose through one canonical payload type per data kind with
+mandatory SI units, a shared local ENU frame, and pinned references for large
+series. Built-in providers convert Deployment IR into canonical payloads and
+run an analytical energy-reserve and route-clearance graph end to end.
+
 ## Development
 
 ```bash
@@ -93,7 +98,8 @@ surface and its product boundary,
 investigation-state semantics, and
 [Capability ontology v0.1](docs/capability-ontology-v0.1.md) for how
 hypotheses become capability requirements. The provider contract is described in
-[Tool registry v0.1](docs/tool-registry-v0.1.md).
+[Tool registry v0.1](docs/tool-registry-v0.1.md), and payload conventions in
+[Typed interfaces v0.1](docs/typed-interfaces-v0.1.md).
 
 ## Synthetic QA corpus
 

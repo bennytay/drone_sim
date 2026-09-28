@@ -143,6 +143,13 @@ Opaque customer models expose only this contract and validation evidence. The
 registry returns a deterministic comparison of providers for a capability in a
 given operating context, keeping claimed validity separate from validated trust.
 
+Providers exchange canonical payloads: one Pydantic type per data kind, SI
+units, a shared local East-North-Up frame, UTC-epoch-relative time, and pinned
+references for large series and assets. Tool adapters validate every port,
+frame, and emitted measure at the boundary. Converting Deployment IR into
+canonical payloads is a registered provider like any other; native model or
+simulator formats stay inside each adapter.
+
 ### Scenario Spec
 
 Scenario Spec is the simulator- and model-agnostic contract for a test. It

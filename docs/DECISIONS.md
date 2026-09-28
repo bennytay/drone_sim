@@ -288,3 +288,23 @@ claims.
 
 **Rationale:** Recency and provenance make external context reviewable while
 preventing generic knowledge from silently replacing customer-specific facts.
+
+## ADR-019: One canonical payload type per data kind with enforced conventions
+
+**Decision:** Map every ontology data kind to one typed payload. Require SI
+units, a shared local ENU frame per test, UTC-epoch-relative time,
+meteorological wind direction, and SHA-256-pinned references for large series
+and assets. Validate ports, frames, and measures in the adapter base class.
+Treat Deployment IR semantic conversion as a registered provider, and confine
+model-specific adaptation to each adapter.
+
+**Rationale:** Composition without bespoke integration requires that any
+producer of a kind can feed any consumer of that kind. Enforcing conventions at
+the boundary turns silent unit, frame, or datum mismatches into immediate
+errors, and pinned references keep large drone logs and meshes out of the
+planner while preserving reproducibility.
+
+**Revisit when:** Site-scale tangent-plane frames become inadequate for long
+BVLOS routes, or a material evaluation needs spatially varying fields that
+cannot be represented by referenced grids.
+
