@@ -8,6 +8,7 @@ import pytest
 LAYERS = {
     "component": {
         "test_agent_tools.py",
+        "test_document_extraction.py",
         "test_adapters.py",
         "test_capabilities.py",
         "test_coverage.py",
