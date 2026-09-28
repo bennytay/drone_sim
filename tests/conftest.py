@@ -23,6 +23,7 @@ LAYERS = {
         "test_hypothesis.py",
         "test_interfaces.py",
         "test_investigation.py",
+        "test_investigation_loop.py",
         "test_ir.py",
         "test_knowledge.py",
         "test_llm.py",
