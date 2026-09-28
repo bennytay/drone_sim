@@ -6,7 +6,7 @@ Intended behavior lives in [`ARCHITECTURE.md`](ARCHITECTURE.md#intended-architec
 when the two disagree, this file describes reality.
 
 - **Audited at:** `b2f7e81` (BEN-17) plus the Golden Path layer added on top.
-- **Test suite at audit:** 146 passing (`uv run pytest`).
+- **Test suite at audit:** 152 passing (`uv run pytest`).
 - **See it run:** [`DEMO.md`](DEMO.md). **Test layers:** [`TESTING.md`](TESTING.md).
 
 Legend: ✅ implemented and working · 🟡 partial · ⚪ planned / not
@@ -42,6 +42,7 @@ remains deterministic.
 | LLM provider edge + call ledger | ✅ | `llm.py`, `llm_ledger.py`, `llm_cli.py` | `test_llm.py`, `test_llm_ledger.py` |
 | LLM safety boundary | ✅ | `llm_safety.py` | `test_llm_safety.py` |
 | LLM evaluation harness | 🟡 replay baseline | `llm_eval.py`, `llm_eval_cli.py` | `test_llm_eval.py` |
+| Document extraction | 🟡 verified replay contract | `document_extraction.py` | `test_document_extraction.py` |
 | Hypothesis **generation** | ⚪ | — | — |
 | Knowledge enrichment | 🟡 contract only | `knowledge.py` | `test_knowledge.py` |
 | Capability ontology + mechanism bindings | ✅ | `capabilities.py` | `test_capabilities.py` |
