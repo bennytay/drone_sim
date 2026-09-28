@@ -45,8 +45,15 @@ def test_representative_hypothesis_resolves_to_capabilities() -> None:
     assert "energy.route_demand" in binding.required
     assert "energy.reserve_assessment" in binding.required
     assert DEFAULT_CAPABILITY_ONTOLOGY.get("energy.route_demand").output_kinds == {
-        DataKind.BATTERY_STATE
+        DataKind.BATTERY_STATE,
+        DataKind.MEASURE,
     }
+
+
+def test_measuring_capabilities_expose_a_uniform_measure_port() -> None:
+    for capability in DEFAULT_CAPABILITY_ONTOLOGY.capabilities:
+        if capability.measures:
+            assert DataKind.MEASURE in capability.output_kinds, capability.id
 
 
 def test_closed_loop_composites_name_atomic_components() -> None:

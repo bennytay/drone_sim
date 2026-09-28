@@ -29,6 +29,27 @@ regions, fidelity, errors, cost, runtime mode, and reproducibility, so the
 planner can compare an analytical model, empirical fit, geometry engine,
 simulator, or opaque customer model programmatically.
 
+Providers compose through one canonical payload type per data kind with
+mandatory SI units, a shared local ENU frame, and pinned references for large
+series. Built-in providers convert Deployment IR into canonical payloads and
+run an analytical energy-reserve and route-clearance graph end to end.
+
+A deterministic graph planner turns a hypothesis's observables into an
+acyclic plan of registered providers, surfaces unsatisfiable capabilities, and
+executes it with input/output digests, lineage, and uncertainty sources for
+every resulting measure.
+
+Fidelity routing runs each hypothesis at the cheapest credible fidelity and
+escalates — up to Isaac-class simulation — only when a result is near its
+decision boundary, unquantified, or of unconfirmed validity, or when the
+mechanism needs closed-loop interaction or rendered sensors. Each step records
+its justification, and disagreement between fidelity levels is flagged.
+
+A version-specific trust ledger records validation datasets, residuals,
+unsupported regions, and deployment feedback so model selection weighs
+validated trust and empirical uncertainty rather than capability match alone,
+and findings outside validated regions carry an explicit confidence cap.
+
 ## Development
 
 ```bash
@@ -93,7 +114,11 @@ surface and its product boundary,
 investigation-state semantics, and
 [Capability ontology v0.1](docs/capability-ontology-v0.1.md) for how
 hypotheses become capability requirements. The provider contract is described in
-[Tool registry v0.1](docs/tool-registry-v0.1.md).
+[Tool registry v0.1](docs/tool-registry-v0.1.md), and payload conventions in
+[Typed interfaces v0.1](docs/typed-interfaces-v0.1.md). Planning and execution are
+described in [Capability graph v0.1](docs/capability-graph-v0.1.md), and escalation
+rules in [Fidelity routing v0.1](docs/fidelity-routing-v0.1.md). Trust evidence is
+described in [Model trust v0.1](docs/model-trust-v0.1.md).
 
 ## Synthetic QA corpus
 

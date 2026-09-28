@@ -303,6 +303,59 @@ class RegistrationError(ValueError):
     pass
 
 
+def resolve_manifest(
+    manifest: ToolManifest, ontology: CapabilityOntology = DEFAULT_CAPABILITY_ONTOLOGY
+) -> ToolManifest:
+    """Fill provision defaults from the ontology and reject mismatched contracts."""
+
+    provides = tuple(
+        _resolve_provision(manifest, provision, ontology)
+        for provision in manifest.provides
+    )
+    measured = {m for provision in provides for m in provision.measures}
+    for error in manifest.errors:
+        if error.measure not in measured:
+            raise RegistrationError(
+                f"{manifest.key} declares error for unprovided measure {error.measure}"
+            )
+    return manifest.model_copy(update={"provides": provides})
+
+
+def _resolve_provision(
+    manifest: ToolManifest,
+    provision: CapabilityProvision,
+    ontology: CapabilityOntology,
+) -> CapabilityProvision:
+    try:
+        capability = ontology.get(provision.capability_id)
+    except KeyError:
+        raise RegistrationError(
+            f"{manifest.key} provides unknown capability {provision.capability_id}"
+        ) from None
+    inputs = provision.inputs or capability.inputs
+    outputs = provision.outputs or capability.outputs
+    measures = provision.measures or capability.measures
+    extra_inputs = set(inputs) - set(capability.inputs)
+    if extra_inputs:
+        raise RegistrationError(
+            f"{manifest.key} requires non-canonical inputs for {capability.id}: "
+            f"{', '.join(sorted(port.name for port in extra_inputs))}"
+        )
+    if set(outputs) != set(capability.outputs):
+        raise RegistrationError(
+            f"{manifest.key} outputs for {capability.id} must match the capability"
+        )
+    unknown_measures = set(measures) - set(capability.measures)
+    if unknown_measures:
+        raise RegistrationError(
+            f"{manifest.key} emits undeclared measures for {capability.id}: "
+            f"{', '.join(sorted(unknown_measures))}"
+        )
+    return provision.model_copy(
+        update={"inputs": inputs, "outputs": outputs, "measures": measures}
+    )
+
+
 class ToolRegistry:
     """Validated set of manifests that the planner can query and compare."""
 
@@ -313,17 +366,7 @@ class ToolRegistry:
     def register(self, manifest: ToolManifest) -> ToolManifest:
         if manifest.key in self._manifests:
             raise RegistrationError(f"{manifest.key} is already registered")
-        provides = []
-        for provision in manifest.provides:
-            provides.append(self._resolve(manifest, provision))
-        manifest = manifest.model_copy(update={"provides": tuple(provides)})
-        measured = {m for provision in provides for m in provision.measures}
-        for error in manifest.errors:
-            if error.measure not in measured:
-                raise RegistrationError(
-                    f"{manifest.key} declares error for unprovided measure "
-                    f"{error.measure}"
-                )
+        manifest = resolve_manifest(manifest, self.ontology)
         self._manifests[manifest.key] = manifest
         return manifest
 
@@ -331,39 +374,6 @@ class ToolRegistry:
         return tuple(
             self.register(ToolManifest.model_validate(json.loads(path.read_text())))
             for path in sorted(directory.glob("*.json"))
-        )
-
-    def _resolve(
-        self, manifest: ToolManifest, provision: CapabilityProvision
-    ) -> CapabilityProvision:
-        try:
-            capability = self.ontology.get(provision.capability_id)
-        except KeyError:
-            raise RegistrationError(
-                f"{manifest.key} provides unknown capability {provision.capability_id}"
-            ) from None
-        inputs = provision.inputs or capability.inputs
-        outputs = provision.outputs or capability.outputs
-        measures = provision.measures or capability.measures
-        extra_inputs = set(inputs) - set(capability.inputs)
-        if extra_inputs:
-            raise RegistrationError(
-                f"{manifest.key} requires non-canonical inputs for {capability.id}: "
-                f"{', '.join(sorted(port.name for port in extra_inputs))}"
-            )
-        missing_outputs = set(capability.outputs) - set(outputs)
-        if missing_outputs or set(outputs) - set(capability.outputs):
-            raise RegistrationError(
-                f"{manifest.key} outputs for {capability.id} must match the capability"
-            )
-        unknown_measures = set(measures) - set(capability.measures)
-        if unknown_measures:
-            raise RegistrationError(
-                f"{manifest.key} emits undeclared measures for {capability.id}: "
-                f"{', '.join(sorted(unknown_measures))}"
-            )
-        return provision.model_copy(
-            update={"inputs": inputs, "outputs": outputs, "measures": measures}
         )
 
     @property

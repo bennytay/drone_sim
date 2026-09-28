@@ -288,3 +288,83 @@ claims.
 
 **Rationale:** Recency and provenance make external context reviewable while
 preventing generic knowledge from silently replacing customer-specific facts.
+
+## ADR-019: One canonical payload type per data kind with enforced conventions
+
+**Decision:** Map every ontology data kind to one typed payload. Require SI
+units, a shared local ENU frame per test, UTC-epoch-relative time,
+meteorological wind direction, and SHA-256-pinned references for large series
+and assets. Validate ports, frames, and measures in the adapter base class.
+Treat Deployment IR semantic conversion as a registered provider, and confine
+model-specific adaptation to each adapter.
+
+**Rationale:** Composition without bespoke integration requires that any
+producer of a kind can feed any consumer of that kind. Enforcing conventions at
+the boundary turns silent unit, frame, or datum mismatches into immediate
+errors, and pinned references keep large drone logs and meshes out of the
+planner while preserving reproducibility.
+
+**Revisit when:** Site-scale tangent-plane frames become inadequate for long
+BVLOS routes, or a material evaluation needs spatially varying fields that
+cannot be represented by referenced grids.
+
+## ADR-020: Deterministic backward-chaining capability graphs
+
+**Decision:** Agents choose evaluation goals; a deterministic planner expands
+them backwards from measures to capabilities, binds providers through a
+pluggable selector, and expands dependencies from the chosen provider's ports.
+Plans are acyclic; closed-loop coupling is represented only inside composite
+capabilities provided as a unit. Unsatisfiable elements are explicit gaps.
+Execution records digests, lineage, failures, and uncertainty contributors
+without numerically combining errors outside a registered capability.
+
+**Rationale:** Deterministic search makes test paths reproducible and
+auditable, while provider-driven expansion avoids unnecessary upstream work.
+Explicit gaps and unquantified-contributor flags prevent silent coverage loss
+and unsupported confidence.
+
+**Revisit when:** Goals routinely need multiple providers for the same
+capability in one plan, or search over alternative providers must optimize
+global cost rather than choosing greedily per capability.
+
+## ADR-021: Margin-driven, justified fidelity escalation
+
+**Decision:** Route each capability to the lowest fidelity allowed by
+mechanism floors, preferring confirmed validity, then cost. Escalate the
+producing capability one fidelity class when a decision measure lies within
+`boundary_factor` times its error of the threshold, lacks quantified
+uncertainty, or comes from a provider whose validity cannot be confirmed.
+Closed-loop composites and appearance-driven perception mechanisms start at
+high-fidelity simulation. Record justifications for every selection and
+escalation, and flag cross-level disagreement for review instead of trusting
+the higher-fidelity result by default.
+
+**Rationale:** Most drone deployment questions are settled by cheap models
+when the margin is large; spending simulation budget only near decision
+boundaries or where mechanisms demand feedback or rendering keeps
+investigations economical while every escalation remains explainable.
+
+**Revisit when:** Calibrated error models support probabilistic stopping rules,
+or escalation of upstream capabilities (not only the measure's producer) is
+needed to resolve boundary cases.
+
+## ADR-022: Platform-held, version-specific model trust
+
+**Decision:** Keep validation evidence in a trust ledger separate from provider
+manifests. Trust is per model version and per global, customer, or deployment
+scope, never inherited across versions. High-confidence findings require
+verified (pinned, platform-reproduced) validation coverage, sufficient residual
+samples for the measure, and no drift. Extrapolated or unvalidated results are
+capped at low confidence and escalate during routing; unsupported regions are
+excluded. Deployment feedback updates residuals and grows trust regions only
+where real outcomes exist.
+
+**Rationale:** Providers cannot certify their own credibility, and a model
+that is valid in one wind band, version, or customer fleet is not automatically
+valid elsewhere. Explicit evidence requirements keep findings defensible and
+make extrapolation visible in the readiness report.
+
+**Revisit when:** Enough deployment outcomes exist to calibrate probabilistic
+trust or to justify controlled inheritance between closely related model
+versions.
+

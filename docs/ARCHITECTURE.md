@@ -143,6 +143,21 @@ Opaque customer models expose only this contract and validation evidence. The
 registry returns a deterministic comparison of providers for a capability in a
 given operating context, keeping claimed validity separate from validated trust.
 
+Providers exchange canonical payloads: one Pydantic type per data kind, SI
+units, a shared local East-North-Up frame, UTC-epoch-relative time, and pinned
+references for large series and assets. Tool adapters validate every port,
+frame, and emitted measure at the boundary. Converting Deployment IR into
+canonical payloads is a registered provider like any other; native model or
+simulator formats stay inside each adapter.
+
+A deterministic graph planner expands an evaluation goal — typically a
+hypothesis's confirm and falsify observables — backwards into capabilities,
+binds one provider per capability, and lets the chosen provider's input ports
+drive further expansion. Plans are acyclic, closed-loop composites are single
+nodes, and unsatisfiable measures, providers, or inputs are returned as explicit
+gaps. Execution records input and output digests, lineage, failures, skipped
+dependents, and per-measure uncertainty sources.
+
 ### Scenario Spec
 
 Scenario Spec is the simulator- and model-agnostic contract for a test. It
@@ -171,6 +186,24 @@ dynamics, sensor effects, and environmental detail only when they can affect
 the mechanism being tested. Existing meshes, point clouds, CAD, and GIS enter
 through the scene-input pipeline; reconstruction from historical imagery or
 video comes later.
+
+The versioned routing policy implements this with mechanism floors (closed-loop
+composites and appearance-driven perception mechanisms start at high-fidelity
+simulation), a selector that prefers the lowest eligible fidelity with
+confirmed validity, and boundary assessment of each decision measure against
+`boundary_factor` times its declared error. Near-boundary, unquantified, or
+unconfirmed-validity results escalate the producing capability one fidelity
+class at a time with written justifications. Disagreement between consecutive
+levels beyond their combined error is flagged for review rather than resolved
+by assuming the higher-fidelity result.
+
+A version-specific trust ledger records validation datasets, residual
+distributions, unsupported regions, deployment feedback, and drift for each
+model version and customer or deployment scope. It classifies each operating
+point as validated, extrapolated, unvalidated, or unsupported and caps finding
+confidence accordingly. Routing excludes unsupported providers, prefers better
+trust at equal fidelity, escalates untrusted results, and widens optimistic
+declared errors with empirical residual bounds.
 
 ### Deterministic judges
 
