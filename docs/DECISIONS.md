@@ -278,3 +278,13 @@ without weakening credibility checks.
 per-variable intervals, airframes, and tags, or runtime and cost must be
 estimated per scenario rather than declared per provider.
 
+## ADR-018: External knowledge enriches but does not override deployment evidence
+
+**Decision:** Record source kind, locator, retrieval time, publication time
+where available, hash, summary, and allowed use for knowledge enrichment. Let
+broad engineering, platform, and model knowledge prompt hypotheses only;
+customer deployment evidence takes precedence over fact-eligible external
+claims.
+
+**Rationale:** Recency and provenance make external context reviewable while
+preventing generic knowledge from silently replacing customer-specific facts.
