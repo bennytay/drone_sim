@@ -19,7 +19,7 @@ uv run drone-llm-eval benchmarks/llm_baseline.json # replay scorecard
 uv run pytest tests/test_document_extraction.py # anchored document proposals
 ```
 
-At the time of writing: 169 tests, all passing, in under a second. CI
+At the time of writing: 170 tests, all passing, in under a second. CI
 (`.github/workflows/test.yml`, job `test`) runs `uv run pytest -q` on Python
 3.13 for every pull request and every push to `main`.
 
@@ -96,7 +96,7 @@ least-privilege API key and run:
 
 ```bash
 ANTHROPIC_API_KEY=... uv run drone-llm-smoke
-ANTHROPIC_API_KEY=... uv run drone-eval agent examples/demo_deployment --live --fresh
+ANTHROPIC_API_KEY=... uv run drone-eval agent examples/demo_deployment --live --llm-policy hosted-policy.json --fresh
 ```
 
 Optional settings are `DRONE_SIM_LLM_EXTRACTION_MODEL`,

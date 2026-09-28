@@ -548,17 +548,28 @@ def main(argv: list[str] | None = None) -> int:
         help="Versioned offline/replay LLM responses; demo defaults to its bundled fixture",
     )
     agent.add_argument("--live", action="store_true", help="Use configured hosted LLM calls instead of replay")
+    agent.add_argument(
+        "--llm-policy", type=Path,
+        help="Per-deployment JSON policy required to permit hosted customer-data calls",
+    )
     agent.add_argument("--fresh", action="store_true", help="Discard cached context state")
     args = parser.parse_args(argv)
 
     if args.command == "agent":
         from drone_sim.agent_session import render_agent_session, run_agent_session
+        from drone_sim.llm_safety import DeploymentLLMPolicy
 
         work_dir = args.work_dir or Path("work") / args.root.resolve().name
         try:
+            policy = (
+                DeploymentLLMPolicy.model_validate_json(args.llm_policy.read_text())
+                if args.llm_policy
+                else DeploymentLLMPolicy()
+            )
             state, result = run_agent_session(
                 args.root, work_dir, answers_path=args.answers,
-                replay_path=args.replay, live=args.live, fresh=args.fresh,
+                replay_path=args.replay, live=args.live, llm_policy=policy,
+                fresh=args.fresh,
             )
         except (LLMError, OSError, ValueError) as error:
             print(f"drone-eval: {error}", file=sys.stderr)

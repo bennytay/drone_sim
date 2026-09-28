@@ -37,7 +37,7 @@ uv run drone-eval agent examples/demo_deployment --answers answers.json
 uv run drone-eval agent my_deployment --replay session_replay.json
 
 # Manual hosted verification (uses your explicitly supplied key)
-ANTHROPIC_API_KEY=... uv run drone-eval agent examples/demo_deployment --live --fresh
+ANTHROPIC_API_KEY=... uv run drone-eval agent examples/demo_deployment --live --llm-policy hosted-policy.json --fresh
 
 # A folder with contradictory evidence: stops at the readiness gate (exit code 2)
 uv run drone-eval analyse examples/synthetic_deployments/03_coastal-turbine_conflicting
@@ -45,6 +45,11 @@ uv run drone-eval analyse examples/synthetic_deployments/03_coastal-turbine_conf
 # Context reconstruction only, as JSON (the older entry point)
 uv run deployment-context examples/demo_deployment --state /tmp/demo.state.json
 ```
+
+Hosted mode requires an explicit per-deployment policy such as
+`{"allow_hosted_llm":true,"redaction_patterns":[]}`. With no policy, `--live`
+runs the deterministic context/applicability stages and records that no bytes
+were sent. Replay remains local and does not require hosted-call permission.
 
 Exit codes: `0` means every implemented stage ran. `2` means the pipeline
 stopped because the context was not ready. `1` means a usage or input error.
