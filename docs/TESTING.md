@@ -16,6 +16,7 @@ uv run pytest tests/test_routing.py # one module
 uv run pytest tests/test_llm.py     # LLM replay contract tests
 uv run pytest tests/test_llm_ledger.py # ledger persistence, replay, and budgets
 uv run drone-llm-eval benchmarks/llm_baseline.json # replay scorecard
+uv run pytest tests/test_document_extraction.py # anchored document proposals
 ```
 
 At the time of writing: 131 tests, all passing, in under a second. CI
@@ -40,6 +41,7 @@ One module or contract in isolation.
 | `test_llm_ledger.py` | Persistent call entries, replay without a provider, input/trace references, usage/cost, and explicit budget stops |
 | `test_llm_safety.py` | Adversarial-text delimiting, redaction, disabled-call behavior, ledger payload hashes, and forbidden decision contracts |
 | `test_llm_eval.py` | Replay scorecards for extraction, hypotheses, and ingestion efficiency |
+| `test_document_extraction.py` | Bounded-document replay extraction and deterministic quote/hash anchoring |
 | `test_capabilities.py` | Ontology closure, vendor neutrality, mechanism bindings |
 | `test_registry.py` | Manifest validation, provider comparison, loading `examples/tool_manifests/` |
 | `test_interfaces.py` | Canonical payloads, frame/unit checks, built-in model calculations (energy, clearance with a fixture site) |
