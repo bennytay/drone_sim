@@ -237,8 +237,54 @@ silently discarding overlapping proposals.
 **Revisit when:** A validated capability registry can supply typed quantitative
 threshold references without letting free-form agent output define them.
 
-## ADR-016: External knowledge enriches but does not override deployment evidence
+## ADR-016: Capabilities are tool-independent causal transformations
 
-**Decision:** Record source kind, locator, retrieval time, publication time where available, hash, summary, and allowed use for knowledge enrichment. Let broad engineering, platform, and model knowledge prompt hypotheses only; customer deployment evidence takes precedence over fact-eligible external claims.
+**Decision:** Define a versioned capability ontology in which each capability
+is one causal transformation with typed canonical inputs, outputs, and named
+measures. Keep fidelity, cost, runtime, and implementation on registered
+providers. Represent tightly coupled feedback as closed-loop composite
+capabilities provided as a unit. Bind every failure-taxonomy leaf to a minimum
+capability set and validate that binding for dataflow closure and outcome
+coverage. Reject vendor or simulator names in the ontology.
 
-**Rationale:** Recency and provenance make external context reviewable while preventing generic knowledge from silently replacing customer-specific facts.
+**Rationale:** The planner must reason about what a hypothesis needs, not which
+product computes it. Capabilities at the granularity of one causal
+transformation let multiple fidelity levels satisfy the same need, keep
+dependency graphs acyclic, and let new providers become available without
+changing hypothesis semantics.
+
+**Revisit when:** Real providers routinely need to split or merge capabilities
+to be registered, or closed-loop composites become too coarse to route
+fidelity economically. Version the ontology rather than reinterpreting existing
+bindings.
+
+## ADR-017: Providers register declarative manifests against the ontology
+
+**Decision:** Every model or tool registers a versioned `ToolManifest` that
+binds it to ontology capabilities with canonical ports and measures, declares
+airframes, conditional provisions, claimed validity region, fidelity, cost,
+runtime, execution mode, per-measure errors, empirical trust regions,
+disclosure, and reproducibility. Registration rejects non-canonical contracts.
+Opaque providers must run behind a service boundary and supply error and
+validation evidence. Region membership is three-valued.
+
+**Rationale:** The planner can only compose and compare providers it
+understands from metadata. Declaring validity separately from validated trust
+prevents extrapolation from masquerading as evidence, and requiring
+contract-level evidence for opaque models lets customers keep internals private
+without weakening credibility checks.
+
+**Revisit when:** Real providers need richer validity descriptions than
+per-variable intervals, airframes, and tags, or runtime and cost must be
+estimated per scenario rather than declared per provider.
+
+## ADR-018: External knowledge enriches but does not override deployment evidence
+
+**Decision:** Record source kind, locator, retrieval time, publication time
+where available, hash, summary, and allowed use for knowledge enrichment. Let
+broad engineering, platform, and model knowledge prompt hypotheses only;
+customer deployment evidence takes precedence over fact-eligible external
+claims.
+
+**Rationale:** Recency and provenance make external context reviewable while
+preventing generic knowledge from silently replacing customer-specific facts.

@@ -1,0 +1,40 @@
+{
+  "manifest_version": "0.1.0",
+  "id": "reference.momentum-energy",
+  "version": "0.1.0",
+  "name": "Momentum-theory route energy",
+  "description": "Closed-form induced and parasitic power integrated along route legs with steady wind.",
+  "provides": [
+    {
+      "capability_id": "energy.route_demand",
+      "inputs": [
+        {"name": "route", "kind": "route"},
+        {"name": "vehicle_envelope", "kind": "vehicle_envelope"},
+        {"name": "wind_field", "kind": "wind_field"},
+        {"name": "atmosphere", "kind": "atmosphere"}
+      ],
+      "conditions": {"airframes": ["multirotor"]}
+    },
+    {"capability_id": "energy.reserve_assessment"}
+  ],
+  "airframes": ["multirotor", "vtol"],
+  "validity_region": {
+    "bounds": [
+      {"variable": "wind_speed_mps", "minimum": 0, "maximum": 12, "unit": "m/s"},
+      {"variable": "airspeed_mps", "minimum": 0, "maximum": 18, "unit": "m/s"}
+    ]
+  },
+  "fidelity": "analytical",
+  "errors": [
+    {
+      "measure": "route_energy_wh",
+      "kind": "relative_bound",
+      "value": 0.15,
+      "basis": "Momentum theory omits blade profile losses and transient manoeuvres"
+    }
+  ],
+  "runtime": {"typical_runtime_s": 0.01},
+  "cost": "negligible",
+  "execution_mode": "in_process",
+  "reproducibility": {"deterministic": true}
+}

@@ -18,6 +18,17 @@ be applicable and unexamined, ruled out by context, or uncertain because
 required evidence is missing. Residual unknown risks remain visible rather
 than being treated as safety proof.
 
+Each taxonomy mechanism is expressed as a minimum set of canonical
+capabilities, such as route energy demand or trajectory clearance, drawn from a
+tool-independent capability ontology. Capabilities declare typed inputs,
+outputs, and measures but never name a simulator or vendor model.
+
+Models and tools register a declarative manifest against that ontology. It
+states provided capabilities, canonical ports, validity and validated trust
+regions, fidelity, errors, cost, runtime mode, and reproducibility, so the
+planner can compare an analytical model, empirical fit, geometry engine,
+simulator, or opaque customer model programmatically.
+
 ## Development
 
 ```bash
@@ -77,8 +88,12 @@ for readiness thresholds and conflict handling, and
 The broader search and linking loop is documented in
 [Context reconstruction](docs/context-reconstruction-v0.1.md). See
 [Failure taxonomy v0.1](docs/failure-taxonomy-v0.1.md) for the discovery
-surface and its product boundary, and [Failure coverage v0.1](docs/failure-coverage-v0.1.md)
-for applicability and investigation-state semantics.
+surface and its product boundary,
+[Failure coverage v0.1](docs/failure-coverage-v0.1.md) for applicability and
+investigation-state semantics, and
+[Capability ontology v0.1](docs/capability-ontology-v0.1.md) for how
+hypotheses become capability requirements. The provider contract is described in
+[Tool registry v0.1](docs/tool-registry-v0.1.md).
 
 ## Synthetic QA corpus
 
