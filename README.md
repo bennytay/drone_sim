@@ -39,6 +39,12 @@ acyclic plan of registered providers, surfaces unsatisfiable capabilities, and
 executes it with input/output digests, lineage, and uncertainty sources for
 every resulting measure.
 
+Fidelity routing runs each hypothesis at the cheapest credible fidelity and
+escalates — up to Isaac-class simulation — only when a result is near its
+decision boundary, unquantified, or of unconfirmed validity, or when the
+mechanism needs closed-loop interaction or rendered sensors. Each step records
+its justification, and disagreement between fidelity levels is flagged.
+
 ## Development
 
 ```bash
@@ -105,7 +111,8 @@ investigation-state semantics, and
 hypotheses become capability requirements. The provider contract is described in
 [Tool registry v0.1](docs/tool-registry-v0.1.md), and payload conventions in
 [Typed interfaces v0.1](docs/typed-interfaces-v0.1.md). Planning and execution are
-described in [Capability graph v0.1](docs/capability-graph-v0.1.md).
+described in [Capability graph v0.1](docs/capability-graph-v0.1.md), and escalation
+rules in [Fidelity routing v0.1](docs/fidelity-routing-v0.1.md).
 
 ## Synthetic QA corpus
 

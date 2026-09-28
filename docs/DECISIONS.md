@@ -327,3 +327,24 @@ and unsupported confidence.
 capability in one plan, or search over alternative providers must optimize
 global cost rather than choosing greedily per capability.
 
+## ADR-021: Margin-driven, justified fidelity escalation
+
+**Decision:** Route each capability to the lowest fidelity allowed by
+mechanism floors, preferring confirmed validity, then cost. Escalate the
+producing capability one fidelity class when a decision measure lies within
+`boundary_factor` times its error of the threshold, lacks quantified
+uncertainty, or comes from a provider whose validity cannot be confirmed.
+Closed-loop composites and appearance-driven perception mechanisms start at
+high-fidelity simulation. Record justifications for every selection and
+escalation, and flag cross-level disagreement for review instead of trusting
+the higher-fidelity result by default.
+
+**Rationale:** Most drone deployment questions are settled by cheap models
+when the margin is large; spending simulation budget only near decision
+boundaries or where mechanisms demand feedback or rendering keeps
+investigations economical while every escalation remains explainable.
+
+**Revisit when:** Calibrated error models support probabilistic stopping rules,
+or escalation of upstream capabilities (not only the measure's producer) is
+needed to resolve boundary cases.
+
