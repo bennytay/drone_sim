@@ -428,3 +428,16 @@ investigation.
 **Revisit when:** BEN-49 supplies a unified workflow-run store, BEN-66 settles
 retention/encryption policy for recorded outputs, or pricing must be fetched
 from a governed provider catalog rather than supplied as pinned configuration.
+
+## ADR-026: Treat deployment content as untrusted LLM evidence
+
+**Decision:** Require an explicit deployment policy before sending hosted LLM
+requests. Redact configured patterns, delimit all untrusted text, and ledger
+the hash of exactly what was sent. Accept LLM output only as typed proposals;
+never expose conflict resolution, thresholds, or deterministic judgments as
+model output contracts. Require inferred evidence to retain source anchors
+that deterministic code verifies against source bytes.
+
+**Rationale:** Operator-provided documents can contain prompt injection. This
+boundary prevents their prose from becoming system authority while preserving
+traceable, limited evidence proposals for later deterministic review.
