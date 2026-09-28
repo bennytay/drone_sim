@@ -34,6 +34,11 @@ mandatory SI units, a shared local ENU frame, and pinned references for large
 series. Built-in providers convert Deployment IR into canonical payloads and
 run an analytical energy-reserve and route-clearance graph end to end.
 
+A deterministic graph planner turns a hypothesis's observables into an
+acyclic plan of registered providers, surfaces unsatisfiable capabilities, and
+executes it with input/output digests, lineage, and uncertainty sources for
+every resulting measure.
+
 ## Development
 
 ```bash
@@ -99,7 +104,8 @@ investigation-state semantics, and
 [Capability ontology v0.1](docs/capability-ontology-v0.1.md) for how
 hypotheses become capability requirements. The provider contract is described in
 [Tool registry v0.1](docs/tool-registry-v0.1.md), and payload conventions in
-[Typed interfaces v0.1](docs/typed-interfaces-v0.1.md).
+[Typed interfaces v0.1](docs/typed-interfaces-v0.1.md). Planning and execution are
+described in [Capability graph v0.1](docs/capability-graph-v0.1.md).
 
 ## Synthetic QA corpus
 
