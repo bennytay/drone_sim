@@ -1,0 +1,42 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "synthetic-04-quarry-mapping",
+      "properties": {
+        "altitude_reference": "above_ground"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            150.15,
+            -33.48,
+            13.0
+          ],
+          [
+            150.15014,
+            -33.47988,
+            17.0
+          ],
+          [
+            150.15028,
+            -33.47976,
+            20.1
+          ],
+          [
+            150.15042,
+            -33.47964,
+            23.8
+          ],
+          [
+            150.15056,
+            -33.47952,
+            27.3
+          ]
+        ]
+      }
+    }
+  ]
+}

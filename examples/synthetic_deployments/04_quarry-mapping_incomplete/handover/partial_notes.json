@@ -1,0 +1,45 @@
+{
+  "operation_id": "synthetic-04-quarry-mapping",
+  "aircraft": {
+    "aircraft_id": "fictional-uav-340",
+    "type": "multirotor",
+    "manufacturer": "Synthetic Aeroworks",
+    "model": "Verifier-M4",
+    "takeoff_mass_kg": 4.32,
+    "max_takeoff_mass_kg": 6.03,
+    "size_m": [
+      0.77,
+      0.85,
+      0.35
+    ],
+    "max_speed_mps": 20.1,
+    "max_wind_speed_mps": 11.9,
+    "model_refs": []
+  },
+  "operating_site": {
+    "name": "Lithgow quarry",
+    "reference_point": {
+      "latitude_deg": -33.48,
+      "longitude_deg": 150.15,
+      "altitude_m": 106.1,
+      "altitude_reference": "mean_sea_level"
+    },
+    "artifacts": [
+      {
+        "id": "site-model-04",
+        "uri": "site/site.obj",
+        "role": "site_model",
+        "media_type": "text/plain"
+      }
+    ]
+  },
+  "weather": {
+    "observed_at": "2026-10-08T20:30:00Z",
+    "temperature_c": 16.1,
+    "wind_speed_mps": 2.6,
+    "wind_direction_deg": 94,
+    "precipitation_mm_h": 0,
+    "visibility_m": 15000,
+    "artifacts": []
+  }
+}

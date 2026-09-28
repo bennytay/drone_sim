@@ -1,0 +1,19 @@
+{
+  "operating_site": {
+    "name": "Hawkesbury bridge",
+    "reference_point": {
+      "latitude_deg": -33.552,
+      "longitude_deg": 150.68,
+      "altitude_m": 40.1,
+      "altitude_reference": "mean_sea_level"
+    },
+    "artifacts": [
+      {
+        "id": "site-model-05",
+        "uri": "site/site.obj",
+        "role": "site_model",
+        "media_type": "text/plain"
+      }
+    ]
+  }
+}

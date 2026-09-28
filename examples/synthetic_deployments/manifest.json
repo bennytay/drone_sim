@@ -1,0 +1,41 @@
+{
+  "seed": 20260928,
+  "deployments": [
+    {
+      "folder": "01_rooftop-inspection_clean",
+      "layout": "clean",
+      "expected_readiness": "ready",
+      "deployment_id": "synthetic-01-rooftop-inspection"
+    },
+    {
+      "folder": "02_solar-farm-survey_messy",
+      "layout": "messy",
+      "expected_readiness": "ready",
+      "deployment_id": "synthetic-02-solar-farm-survey"
+    },
+    {
+      "folder": "03_coastal-turbine_conflicting",
+      "layout": "conflicting",
+      "expected_readiness": "conflicting",
+      "deployment_id": "synthetic-03-coastal-turbine"
+    },
+    {
+      "folder": "04_quarry-mapping_incomplete",
+      "layout": "incomplete",
+      "expected_readiness": "incomplete",
+      "deployment_id": "synthetic-04-quarry-mapping"
+    },
+    {
+      "folder": "05_bridge-inspection_split",
+      "layout": "split",
+      "expected_readiness": "ready",
+      "deployment_id": "synthetic-05-bridge-inspection"
+    },
+    {
+      "folder": "06_night-search_invalid_unit",
+      "layout": "invalid_unit",
+      "expected_readiness": "invalid",
+      "deployment_id": "synthetic-06-night-search"
+    }
+  ]
+}
