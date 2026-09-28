@@ -24,6 +24,7 @@ from drone_sim.hypothesis import (
     merge_duplicates,
 )
 from drone_sim.ir import StrictModel
+from drone_sim.knowledge import KnowledgeBundle, KnowledgeKind
 from drone_sim.llm import (
     LLMMessage,
     LLMTask,
@@ -81,6 +82,7 @@ def generate_hypotheses(
     taxonomy: FailureTaxonomy = DEFAULT_FAILURE_TAXONOMY,
     ontology: CapabilityOntology = DEFAULT_CAPABILITY_ONTOLOGY,
     bindings: MechanismCapabilityMap = DEFAULT_MECHANISM_CAPABILITIES,
+    knowledge: KnowledgeBundle | None = None,
     prompt: Prompt | None = None,
 ) -> GroundedHypothesisGeneration:
     """Generate once holistically, then deterministically audit every proposal."""
@@ -89,7 +91,7 @@ def generate_hypotheses(
         raise ValueError("coverage and taxonomy versions differ")
     if bindings.validate_against(ontology, taxonomy):
         raise ValueError("capability bindings are not valid for this ontology/taxonomy")
-    prompt = prompt or _prompt(evidence, coverage, taxonomy, ontology)
+    prompt = prompt or _prompt(evidence, coverage, taxonomy, ontology, knowledge)
     batch, _ = runner.run(
         task=LLMTask.HYPOTHESIS_REASONING,
         model=model,
@@ -107,7 +109,7 @@ def generate_hypotheses(
         for hypothesis in contract.hypotheses
         if hypothesis.status != HypothesisStatus.MERGED
         for issue in _validate_hypothesis(
-            hypothesis, evidence, ontology, bindings
+            hypothesis, evidence, ontology, bindings, knowledge
         )
     )
     issue_ids = {issue.hypothesis_id for issue in issues}
@@ -151,6 +153,7 @@ def _validate_hypothesis(
     evidence: EvidenceBackedDeployment,
     ontology: CapabilityOntology,
     bindings: MechanismCapabilityMap,
+    knowledge: KnowledgeBundle | None,
 ) -> tuple[GroundingIssue, ...]:
     document = evidence.deployment.model_dump(mode="json", exclude_none=True)
     fact_paths = {fact.path for fact in evidence.facts}
@@ -176,6 +179,38 @@ def _validate_hypothesis(
             )
     if not evidence_refs:
         raise ValueError(f"{hypothesis.id}: no deployment evidence references")
+    knowledge_refs = [
+        reference
+        for reference in hypothesis.supporting_references
+        if reference.kind
+        in {SupportKind.INTERNAL_KNOWLEDGE, SupportKind.EXTERNAL_KNOWLEDGE}
+    ]
+    if knowledge is not None:
+        prompts = {source.id: source for source in knowledge.prompts()}
+        for reference in knowledge_refs:
+            if reference.reference_id not in prompts:
+                raise ValueError(
+                    f"{hypothesis.id}: unknown or fact-only knowledge reference "
+                    f"{reference.reference_id}"
+                )
+        platform_id = f"platform-{hypothesis.mechanism_id}"
+        if platform_id in prompts and not any(
+            reference.reference_id == platform_id for reference in knowledge_refs
+        ):
+            raise ValueError(
+                f"{hypothesis.id}: missing relevant curated platform knowledge citation"
+            )
+        for reference in knowledge_refs:
+            source = prompts[reference.reference_id]
+            expected_kind = (
+                SupportKind.EXTERNAL_KNOWLEDGE
+                if source.kind == KnowledgeKind.ENVIRONMENTAL_CONTEXT
+                else SupportKind.INTERNAL_KNOWLEDGE
+            )
+            if reference.kind != expected_kind:
+                raise ValueError(
+                    f"{hypothesis.id}: knowledge reference kind does not match source provenance"
+                )
     causal_text = " ".join(hypothesis.causal_path)
     cited_values: dict[str, object] = dict(material_values(evidence.deployment))
     cited_values.update(
@@ -236,6 +271,7 @@ def _prompt(
     coverage: CoverageMap,
     taxonomy: FailureTaxonomy,
     ontology: CapabilityOntology,
+    knowledge: KnowledgeBundle | None,
 ) -> Prompt:
     return Prompt(
         id="hypothesis-generation",
@@ -257,6 +293,9 @@ def _prompt(
                         "coverage": coverage.model_dump(mode="json"),
                         "taxonomy": taxonomy.model_dump(mode="json"),
                         "capability_ontology": ontology.model_dump(mode="json"),
+                        "knowledge": (
+                            knowledge.model_dump(mode="json") if knowledge else None
+                        ),
                         "output_schema": HypothesisProposalBatch.model_json_schema(),
                     },
                     sort_keys=True,

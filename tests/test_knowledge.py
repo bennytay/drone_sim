@@ -32,7 +32,7 @@ def test_generic_knowledge_is_prompt_only() -> None:
 def test_deployment_evidence_precedes_external_facts() -> None:
     bundle = KnowledgeBundle(
         sources=(
-            source("external", KnowledgeKind.MANUFACTURER, KnowledgeUse.FACT),
+            source("external", KnowledgeKind.ENVIRONMENTAL_CONTEXT, KnowledgeUse.FACT),
             source("customer", KnowledgeKind.DEPLOYMENT_EVIDENCE, KnowledgeUse.FACT),
         ),
         claims=(

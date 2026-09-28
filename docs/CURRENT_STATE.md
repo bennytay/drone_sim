@@ -6,7 +6,7 @@ Intended behavior lives in [`ARCHITECTURE.md`](ARCHITECTURE.md#intended-architec
 when the two disagree, this file describes reality.
 
 - **Audited at:** `d5554ba` plus the BEN-79 completion-gate change.
-- **Test suite at audit:** 191 passing (`uv run pytest`).
+- **Test suite at audit:** 192 passing (`uv run pytest`).
 - **See it run:** [`DEMO.md`](DEMO.md). **Test layers:** [`TESTING.md`](TESTING.md).
 
 Legend: ✅ implemented and working · 🟡 partial · ⚪ planned / not
@@ -47,7 +47,7 @@ readiness report. Replay mode requires no API key; live mode reads
 | Agent tool registry | 🟡 core read-only discovery/document/taxonomy tools wired | `agent_tools.py`, `agent_session.py` | `test_agent_tools.py`, `test_agent_session.py` |
 | Schema and telemetry mapping | ✅ deterministic allowed conversions, persistent schema cache, KML route and telemetry signals | `schema_mapping.py` | `test_schema_mapping.py` |
 | Hypothesis **generation** | ✅ typed replay/live edge | `hypothesis_generator.py`, `agent_session.py` | `test_hypothesis_generator.py`, `test_agent_session.py`, `test_golden_path.py` |
-| Knowledge enrichment | 🟡 contract only | `knowledge.py` | `test_knowledge.py` |
+| Knowledge enrichment | ✅ folder + curated taxonomy-wide + operator/external/model prompts | `knowledge.py`, `knowledge_retrieval.py`, `hypothesis_generator.py` | `test_knowledge.py`, `test_knowledge_retrieval.py`, `test_hypothesis_generator.py` |
 | Capability ontology + mechanism bindings | ✅ | `capabilities.py` | `test_capabilities.py` |
 | Tool / model registry | ✅ | `registry.py`, `examples/tool_manifests/` | `test_registry.py` |
 | Canonical payloads + tool adapter base | ✅ | `interfaces.py` | `test_interfaces.py` |
@@ -228,9 +228,16 @@ All paths are under `src/drone_sim/` unless stated.
   dropping them, and accounts for covered/missing mechanisms. The Golden Path
   generates energy-reserve, takeoff-mass, and roof-clearance hypotheses and
   persists `hypothesis_generation_audit.json` before planning.
-- **Limitations:** knowledge retrieval is still small. The holistic pass records
-  uncovered applicable mechanisms but does not automatically run follow-up
-  per-mechanism generation yet.
+- **Knowledge enrichment:** bounded manufacturer/site/regulatory documents from
+  the deployment folder, one curated drone incident pattern per taxonomy leaf,
+  operator-provided rules, optional external environmental sources, and
+  explicitly tagged model-world prompts enter `knowledge_bundle.json` with
+  locator, retrieval time, hash, and permitted use. The generator validates
+  knowledge citations separately from deployment evidence. Prompt-only claims
+  cannot alter Deployment IR, and local deployment facts retain precedence.
+- **Limitations:** external retrieval is caller-supplied rather than networked.
+  The holistic pass records uncovered applicable mechanisms but does not
+  automatically run follow-up per-mechanism generation yet.
 - **Test:** `uv run pytest tests/test_hypothesis.py tests/test_hypothesis_generator.py tests/test_agent_session.py`
 
 ### Capability ontology, registry, and payloads — ✅
