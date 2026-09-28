@@ -16,6 +16,8 @@ LAYERS = {
         "test_investigation.py",
         "test_ir.py",
         "test_knowledge.py",
+        "test_llm.py",
+        "test_llm.py",
         "test_provenance.py",
         "test_registry.py",
         "test_stopping.py",
