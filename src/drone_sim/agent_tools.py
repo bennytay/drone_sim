@@ -29,6 +29,7 @@ class ToolAuditEntry(BaseModel):
 
 
 TOOL_DEFINITIONS = (
+    ToolDefinition(name="list_unresolved", description="List unresolved deterministic readiness findings.", input_schema={"type": "object", "properties": {}, "additionalProperties": False}),
     ToolDefinition(name="list_index", description="List deployment file metadata.", input_schema={"type": "object", "properties": {}, "additionalProperties": False}),
     ToolDefinition(name="search_files", description="Rank deployment files by metadata.", input_schema={"type": "object", "properties": {"query": {"type": "string"}, "limit": {"type": "integer", "minimum": 1, "maximum": 20}}, "required": ["query"], "additionalProperties": False}),
     ToolDefinition(name="parse_file", description="Parse one confined deployment file with a bounded adapter.", input_schema={"type": "object", "properties": {"relative_path": {"type": "string"}}, "required": ["relative_path"], "additionalProperties": False}),
@@ -54,6 +55,11 @@ class AgentToolRuntime:
     def list_index(self) -> tuple[dict[str, Any], ...]:
         result = tuple(record.model_dump(mode="json") for record in self.index.records)
         self._record("list_index", {}, result)
+        return result
+
+    def list_unresolved(self, paths: tuple[str, ...]) -> tuple[str, ...]:
+        result = tuple(sorted(paths))
+        self._record("list_unresolved", {}, result)
         return result
 
     def search_files(self, query: str, limit: int = 5) -> tuple[str, ...]:
