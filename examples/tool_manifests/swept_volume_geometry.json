@@ -1,0 +1,27 @@
+{
+  "manifest_version": "0.1.0",
+  "id": "reference.swept-volume",
+  "version": "0.1.0",
+  "name": "Swept-volume clearance",
+  "description": "Exact distance queries between the vehicle's swept volume and site geometry and operating volumes.",
+  "provides": [
+    {"capability_id": "geometry.route_clearance"},
+    {"capability_id": "geometry.trajectory_clearance"},
+    {"capability_id": "geometry.containment"}
+  ],
+  "airframes": ["multirotor", "fixed_wing", "vtol"],
+  "fidelity": "geometric",
+  "errors": [
+    {
+      "measure": "minimum_clearance_m",
+      "kind": "absolute_bound",
+      "value": 0.05,
+      "unit": "m",
+      "basis": "Mesh tessellation tolerance; excludes site model survey error"
+    }
+  ],
+  "runtime": {"typical_runtime_s": 0.5},
+  "cost": "low",
+  "execution_mode": "in_process",
+  "reproducibility": {"deterministic": true}
+}

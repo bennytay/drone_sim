@@ -1,0 +1,49 @@
+{
+  "manifest_version": "0.1.0",
+  "id": "customer.cell-thermal-model",
+  "version": "3.4.1",
+  "name": "Customer battery thermal model",
+  "description": "Proprietary pack model predicting derating and sag; internals are not disclosed.",
+  "owner": "customer",
+  "provides": [
+    {
+      "capability_id": "energy.battery_response",
+      "measures": ["capacity_derating", "voltage_sag_v"]
+    }
+  ],
+  "airframes": ["multirotor"],
+  "validity_region": {
+    "bounds": [
+      {"variable": "temperature_c", "minimum": -20, "maximum": 45, "unit": "C"}
+    ]
+  },
+  "fidelity": "physics",
+  "errors": [
+    {
+      "measure": "voltage_sag_v",
+      "kind": "absolute_bound",
+      "value": 0.3,
+      "unit": "V",
+      "basis": "Customer-supplied validation against climate-chamber cycling"
+    }
+  ],
+  "trust_regions": [
+    {
+      "region": {
+        "bounds": [
+          {"variable": "temperature_c", "minimum": -10, "maximum": 40, "unit": "C"}
+        ]
+      },
+      "evidence_ref": "customer-attestation:chamber-2026-03",
+      "sample_count": 96
+    }
+  ],
+  "runtime": {"typical_runtime_s": 2},
+  "cost": "low",
+  "execution_mode": "customer_hosted",
+  "disclosure": "opaque",
+  "reproducibility": {
+    "deterministic": true,
+    "artifact_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+  }
+}
