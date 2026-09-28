@@ -1,0 +1,21 @@
+{
+  "prompt_id": "fictional_extraction_hypothesis_v1",
+  "prompt_version": "0.1.0",
+  "model": "replay",
+  "cases": [{
+    "id": "fictional-rooftop",
+    "expected_facts": ["vehicle.mass_kg", "conditions.wind_speed_mps"],
+    "expected_mechanisms": ["environmental.wind.control_authority"],
+    "expected_ir_fields": ["vehicle", "mission", "autonomy"],
+    "files_opened": 3
+  }],
+  "results": [{
+    "id": "fictional-rooftop",
+    "proposed_facts": ["vehicle.mass_kg", "conditions.wind_speed_mps"],
+    "anchored_facts": ["vehicle.mass_kg", "conditions.wind_speed_mps"],
+    "proposed_mechanisms": ["environmental.wind.control_authority"],
+    "grounded_mechanisms": ["environmental.wind.control_authority"],
+    "resolved_ir_fields": ["vehicle", "mission", "autonomy"],
+    "files_opened": 3
+  }]
+}
