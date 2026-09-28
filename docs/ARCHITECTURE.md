@@ -187,6 +187,16 @@ the mechanism being tested. Existing meshes, point clouds, CAD, and GIS enter
 through the scene-input pipeline; reconstruction from historical imagery or
 video comes later.
 
+The versioned routing policy implements this with mechanism floors (closed-loop
+composites and appearance-driven perception mechanisms start at high-fidelity
+simulation), a selector that prefers the lowest eligible fidelity with
+confirmed validity, and boundary assessment of each decision measure against
+`boundary_factor` times its declared error. Near-boundary, unquantified, or
+unconfirmed-validity results escalate the producing capability one fidelity
+class at a time with written justifications. Disagreement between consecutive
+levels beyond their combined error is flagged for review rather than resolved
+by assuming the higher-fidelity result.
+
 ### Deterministic judges
 
 Backends emit canonical observations and artifacts. Deterministic judges apply
