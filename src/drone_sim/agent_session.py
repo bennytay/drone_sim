@@ -37,6 +37,12 @@ from drone_sim.hypothesis_generator import generate_hypotheses
 from drone_sim.investigation import InvestigationState, ResultKind, TestResult
 from drone_sim.investigation_loop import InvestigationTrace, advance
 from drone_sim.llm_safety import DeploymentLLMPolicy, prepare_untrusted_text
+from drone_sim.llm_ledger import (
+    CallLedger,
+    InputReference,
+    LedgerMode,
+    LedgeredProvider,
+)
 
 
 class SessionEvent(StrictModel):
@@ -158,20 +164,48 @@ def _prompt(identifier: str, content: str) -> Prompt:
     )
 
 
-def _runner(
-    replay_path: Path | None, live: bool
-) -> tuple[StructuredOutputRunner, str, str]:
+def _runners(
+    replay_path: Path | None,
+    live: bool,
+    *,
+    ledger_path: Path,
+    input_references: tuple[InputReference, ...],
+    context_trace_indices: tuple[int, ...],
+) -> tuple[StructuredOutputRunner, StructuredOutputRunner, StructuredOutputRunner, str, str]:
+    ledger = CallLedger(ledger_path)
     if live:
         config = LLMConfig.from_env()
+        provider = AnthropicProvider(config)
         return (
-            StructuredOutputRunner(AnthropicProvider(config)),
+            StructuredOutputRunner(LedgeredProvider(provider, ledger, mode=LedgerMode.LIVE, stage="document_extraction", input_references=input_references, context_trace_indices=context_trace_indices)),
+            StructuredOutputRunner(LedgeredProvider(provider, ledger, mode=LedgerMode.LIVE, stage="hypothesis_generation", input_references=input_references, context_trace_indices=context_trace_indices)),
+            StructuredOutputRunner(LedgeredProvider(provider, ledger, mode=LedgerMode.LIVE, stage="session_summary", input_references=input_references, context_trace_indices=context_trace_indices)),
             config.extraction_model,
             config.hypothesis_model,
         )
     if replay_path is None:
         replay_path = _demo_replay()
     replay = SessionReplay.model_validate_json(replay_path.read_text())
-    return StructuredOutputRunner(ReplayProvider(replay)), "replay", "replay"
+    source = ReplayProvider(replay)
+    def replay_runner(stage: str) -> StructuredOutputRunner:
+        return StructuredOutputRunner(
+            LedgeredProvider(
+                None,
+                ledger,
+                mode=LedgerMode.REPLAY,
+                stage=stage,
+                input_references=input_references,
+                context_trace_indices=context_trace_indices,
+                replay_provider=source,
+            )
+        )
+    return (
+        replay_runner("document_extraction"),
+        replay_runner("hypothesis_generation"),
+        replay_runner("session_summary"),
+        "replay",
+        "replay",
+    )
 
 
 def _state_path(work_dir: Path) -> Path:
@@ -205,10 +239,25 @@ def run_agent_session(
         raise ValueError("no replay supplied; use --replay FILE for offline sessions")
     if replay_path is not None:
         replay_path = replay_path.resolve(strict=True)
-    runner, extraction_model, reasoning_model = _runner(replay_path, live)
     # Reconstruct before the agent sees any deployment data. This is also the
     # resume boundary: context state is deterministic and persisted separately.
     preliminary = run_golden_path(root, work_dir, fresh=fresh)
+    file_references = tuple(
+        InputReference(
+            kind="deployment_file",
+            identifier=path,
+            sha256=source.sha256,
+        )
+        for path, source in sorted(preliminary.state.parsed_sources.items())
+    )
+    trace_indices = tuple(range(len(preliminary.state.trace)))
+    extraction_runner, hypothesis_runner, summary_runner, extraction_model, reasoning_model = _runners(
+        replay_path,
+        live,
+        ledger_path=work_dir / "llm_ledger.json",
+        input_references=file_references,
+        context_trace_indices=trace_indices,
+    )
     if preliminary.evidence is None or preliminary.stopped_at_context:
         result = preliminary
         reviewed = HypothesisGenerationContract(hypotheses=())
@@ -222,7 +271,7 @@ def run_agent_session(
                 policy=DeploymentLLMPolicy(allow_hosted_llm=True),
             )
             extracted = extract_document_candidates(
-                runner=runner, model=extraction_model,
+                runner=extraction_runner, model=extraction_model,
                 prompt=_prompt(
                     "document-extraction",
                     "Extract supported deployment facts using this JSON Schema:\n"
@@ -251,7 +300,7 @@ def run_agent_session(
             policy=DeploymentLLMPolicy(allow_hosted_llm=True),
         )
         generated = generate_hypotheses(
-            runner=runner, model=reasoning_model,
+            runner=hypothesis_runner, model=reasoning_model,
             prompt=_prompt(
                 "hypothesis-generation",
                 "Propose drone-only failure hypotheses using this JSON Schema:\n"
@@ -322,7 +371,7 @@ def run_agent_session(
         ),
     )
     if result.runs:
-        summary, _ = runner.run(
+        summary, _ = summary_runner.run(
             task=LLMTask.HYPOTHESIS_REASONING,
             model=reasoning_model,
             prompt=_prompt(
