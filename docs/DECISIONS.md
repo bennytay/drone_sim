@@ -201,3 +201,22 @@ fail claims.
 **Revisit when:** Representative deployment audits expose missing domains or
 show that leaf identity cannot survive normal taxonomy evolution. Extend or
 version the catalog without silently reinterpreting historical audit records.
+
+## ADR-014: Three-valued applicability and explicit residual risk
+
+**Decision:** Determine taxonomy applicability with deterministic,
+evidence-recorded predicates that yield `applies`, `ruled_out`, or `unknown`.
+Map these to coverage states without treating unavailable context as an
+irrelevant failure branch. Preserve unexamined, tested, uncertain, escalated,
+and ruled-out coverage separately, and always retain residual unknown-risk
+records.
+
+**Rationale:** A binary relevant/not-relevant result conceals the difference
+between evidence disproving a mechanism and insufficient context to judge it.
+The three-valued result keeps the next evidence request or investigation
+auditable. Residual risk prevents broad taxonomy accounting from being
+misreported as an exhaustive safety assurance.
+
+**Revisit when:** Calibrated evidence confidence can safely supplement the
+three-valued decision while preserving an explicit unknown state and complete
+predicate provenance.

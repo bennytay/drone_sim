@@ -104,6 +104,14 @@ or quantitative verdicts. Upstream aircraft and autonomy development defects
 remain outside the catalog unless deployment evidence identifies a concrete
 site- or mission-specific trigger.
 
+Applicability and coverage are a deterministic layer over that taxonomy. A
+mechanism is `applies`, `ruled_out`, or `unknown` based on recorded Deployment
+IR predicates; absent evidence remains unknown rather than becoming irrelevant.
+Applicable mechanisms begin unexamined and move to tested, uncertain, or
+escalated only through investigation results. The coverage map also records
+residual unknown risks, so catalog coverage is never misrepresented as a safety
+proof.
+
 ### Capability and model registry
 
 The registry describes available parsers, analytical models, geometry checks,
