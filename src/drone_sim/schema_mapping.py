@@ -41,7 +41,7 @@ def _read(document: object, pointer: str) -> Any:
     return value
 
 
-def _convert(value: Any, conversion: Conversion) -> Any:
+def convert_value(value: Any, conversion: Conversion) -> Any:
     if conversion == Conversion.IDENTITY: return value
     if not isinstance(value, (int, float)): raise ValueError("unit conversion requires a numeric source value")
     if conversion == Conversion.GRAMS_TO_KG: return value / 1000
@@ -52,7 +52,7 @@ def _convert(value: Any, conversion: Conversion) -> Any:
 
 def apply_mapping(document: object, mapping: FieldMapping) -> tuple[Any, str]:
     """Return converted value plus the exact source pointer for provenance."""
-    return _convert(_read(document, mapping.source_pointer), mapping.conversion), mapping.source_pointer
+    return convert_value(_read(document, mapping.source_pointer), mapping.conversion), mapping.source_pointer
 
 
 def route_from_coordinates(

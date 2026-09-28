@@ -23,6 +23,7 @@ def test_agent_session_runs_demo_offline_and_persists_readable_trace(tmp_path: P
     assert (tmp_path / "generated_hypotheses.json").exists()
     assert any(event.stage == "facts" for event in state.events)
     assert any(event.stage == "document" and event.anchor == "operations/battery_spec.md#3-3" for event in state.events)
+    assert state.document_candidates[0].origin.value == "inferred"
     assert any(event.stage == "evaluation" for event in state.events)
     assert state.investigation is not None
     assert state.investigation.stop_reason == "no_active_hypotheses"
