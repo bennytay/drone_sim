@@ -408,3 +408,23 @@ later audit and replay possible without coupling core contracts to Anthropic.
 **Revisit when:** A second provider requires a broader normalized response
 model, durable call-ledger storage replaces in-memory response metadata, or
 the customer-data safety policy (BEN-66) narrows the request payload further.
+
+## ADR-025: Persistent hashed LLM ledger with fail-closed replay
+
+**Decision:** Record every live or replayed LLM invocation atomically outside
+the deployment folder. Entries retain prompt/request hashes, model identity,
+explicit candidate and file-hash references, context-trace indices, response,
+validation result, token usage, latency, and cost. Replay uses request hashes
+and refuses a miss rather than making a network request. Apply configured
+per-stage call, token, and cost budgets before live calls, stopping explicitly
+when a limit is reached.
+
+**Rationale:** Hosted LLM behavior must be auditable and testable without
+network access or customer-byte duplication. Keeping request inputs as stable
+references joins model decisions to the existing context audit trail, while
+recording replay attempts prevents a test run from being mistaken for a live
+investigation.
+
+**Revisit when:** BEN-49 supplies a unified workflow-run store, BEN-66 settles
+retention/encryption policy for recorded outputs, or pricing must be fetched
+from a governed provider catalog rather than supplied as pinned configuration.

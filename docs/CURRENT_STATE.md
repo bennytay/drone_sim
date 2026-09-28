@@ -6,7 +6,7 @@ Intended behavior lives in [`ARCHITECTURE.md`](ARCHITECTURE.md#intended-architec
 when the two disagree, this file describes reality.
 
 - **Audited at:** `b2f7e81` (BEN-17) plus the Golden Path layer added on top.
-- **Test suite at audit:** 136 passing (`uv run pytest`).
+- **Test suite at audit:** 140 passing (`uv run pytest`).
 - **See it run:** [`DEMO.md`](DEMO.md). **Test layers:** [`TESTING.md`](TESTING.md).
 
 Legend: ✅ implemented and working · 🟡 partial · ⚪ planned / not
@@ -39,7 +39,7 @@ remains deterministic.
 | Failure taxonomy | ✅ | `failure_taxonomy.py` | `test_failure_taxonomy.py` |
 | Applicability / coverage map | 🟡 | `coverage.py` | `test_coverage.py` |
 | Hypothesis contract | ✅ | `hypothesis.py` | `test_hypothesis.py` |
-| LLM provider edge | ✅ | `llm.py`, `llm_cli.py` | `test_llm.py` |
+| LLM provider edge + call ledger | ✅ | `llm.py`, `llm_ledger.py`, `llm_cli.py` | `test_llm.py`, `test_llm_ledger.py` |
 | Hypothesis **generation** | ⚪ | — | — |
 | Knowledge enrichment | 🟡 contract only | `knowledge.py` | `test_knowledge.py` |
 | Capability ontology + mechanism bindings | ✅ | `capabilities.py` | `test_capabilities.py` |
@@ -111,21 +111,27 @@ All paths are under `src/drone_sim/` unless stated.
   timestamp), no mesh geometry extraction, no image EXIF/geo metadata.
   Unknown suffixes fail closed.
 
-### LLM provider edge — ✅ (not yet wired into an agent)
+### LLM provider edge and call ledger — ✅ (not yet wired into an agent)
 
 - **What it does:** defines provider-neutral messages, versioned prompts, typed
   tool schemas, normalized responses, task-selected model IDs, environment
   configuration, and an Anthropic Messages API adapter. `StructuredOutputRunner`
   parses returned JSON directly into any existing Pydantic contract, feeds
   validation errors back for a bounded repair count, then raises an explicit
-  failure. It cannot establish a readiness result or call arbitrary simulator
-  code.
-- **Where:** `llm.py`; the live configuration check is `llm_cli.py`.
+  failure. An atomic persistent ledger fingerprints each request, records model,
+  prompt version/hash, input references (candidate IDs/file hashes), context
+  trace indices, response, usage, latency, cost, validation result, and whether
+  it was live or replayed. Per-stage budgets stop explicitly; replay cannot
+  fall through to a hosted request. It cannot establish a readiness result or
+  call arbitrary simulator code.
+- **Where:** `llm.py`, `llm_ledger.py`; the live configuration check is
+  `llm_cli.py`.
 - **Run:** `ANTHROPIC_API_KEY=... uv run drone-llm-smoke`.
-- **Test:** `uv run pytest tests/test_llm.py` (replay only; no network call).
-- **Limitations:** no call ledger or durable replay artifact (BEN-65), no
-  customer-data/prompt-injection guard (BEN-66), no evaluation harness
-  (BEN-67), and no product stage consumes this client yet.
+- **Test:** `uv run pytest tests/test_llm.py tests/test_llm_ledger.py` (no
+  network call).
+- **Limitations:** retention and customer-data/prompt-injection policy remain
+  BEN-66; no evaluation harness (BEN-67), and no product stage consumes this
+  client yet.
 
 ### Deployment IR — ✅
 

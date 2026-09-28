@@ -104,6 +104,8 @@ class LLMResponse(BaseModel):
     text: str = ""
     tool_calls: tuple[ToolCall, ...] = ()
     provider_request_id: str | None = None
+    input_tokens: int = Field(default=0, ge=0)
+    output_tokens: int = Field(default=0, ge=0)
 
 
 @dataclass(frozen=True)
@@ -228,6 +230,8 @@ class AnthropicProvider:
             text=text,
             tool_calls=tool_calls,
             provider_request_id=payload.get("id"),
+            input_tokens=payload.get("usage", {}).get("input_tokens", 0),
+            output_tokens=payload.get("usage", {}).get("output_tokens", 0),
         )
 
 
@@ -251,9 +255,12 @@ class StructuredOutputRunner:
         for attempt in range(self._max_repairs + 1):
             response = self._provider.complete(request)
             try:
-                return contract.model_validate_json(response.text), response
+                value = contract.model_validate_json(response.text)
+                self._mark_validation(valid=True)
+                return value, response
             except (ValidationError, ValueError) as error:
                 errors = tuple(item["msg"] for item in getattr(error, "errors", lambda: [])()) or (str(error),)
+                self._mark_validation(valid=False, errors=errors)
                 if attempt == self._max_repairs:
                     break
                 request = request.model_copy(
@@ -276,3 +283,10 @@ class StructuredOutputRunner:
                     }
                 )
         raise StructuredOutputError(contract.__name__, errors)
+
+    def _mark_validation(self, *, valid: bool, errors: tuple[str, ...] = ()) -> None:
+        """Persist validation when called through the optional ledger wrapper."""
+        ledger = getattr(self._provider, "ledger", None)
+        entry_id = getattr(self._provider, "last_entry_id", None)
+        if ledger is not None and entry_id is not None:
+            ledger.mark_validation(entry_id, valid=valid, errors=errors)

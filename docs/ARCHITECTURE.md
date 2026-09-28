@@ -124,7 +124,15 @@ edge. It records the selected task model and provider request identity, accepts
 typed deterministic tools, validates output directly into an existing Pydantic
 contract, asks for a bounded repair using validation errors, and then fails
 closed. A missing API key leaves the deterministic path available. Customer
-data controls and a durable call ledger are separate next stages.
+data controls are a separate safety stage.
+
+Every edge invocation also receives a persistent ledger entry: prompt and
+request hashes, model, explicit candidate/file-hash references, linked context
+trace indices, response, usage, latency, cost, validation outcome, and live or
+replay mode. Replay keys responses by request hash and never falls through to
+the network. Per-stage call, token, and cost budgets stop the agent with an
+explicit reason. Retention and request-data controls remain separate safety
+work.
 
 A versioned drone-only failure taxonomy supplies the systematic discovery
 surface. Its stable hierarchy separates broad domains, mechanism branches, and
