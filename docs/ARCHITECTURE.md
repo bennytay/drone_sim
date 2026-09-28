@@ -310,7 +310,7 @@ Failure taxonomy + applicability map                     🟡  failure_taxonomy.
 Document extraction (typed replay/live LLM edge)         🟡  document_extraction.py + exact quote validation
   │
   ▼
-Failure hypothesis session                               ✅  hypothesis_generator.py + typed replay/live response
+Failure hypothesis session                               ✅  grounded replay/live generation + coverage audit
   │  optional review via answers file
   ▼
 Investigation policy + persisted trace                   🟡  investigation.py, investigation_loop.py, agent_session.py

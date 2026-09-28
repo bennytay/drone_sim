@@ -74,11 +74,17 @@ Drone deployment verification — Agent session
 [context] Examined the deployment files.
 [facts] Extracted 127 anchored material facts.
 [document] Verified document fact 180 from operations/battery_spec.md#3-3.
-[hypothesis] hyp_energy_reserve: Forecast wind and payload mass raise route power demand. -> ...
+[hypothesis] hyp_energy_reserve: The 6.5 m/s forecast wind and 4.2 kg takeoff mass raise route power demand. -> ...
+[hypothesis] hyp_takeoff_mass: The configured drone mass is 4.2 kg against a 6.0 kg approved maximum. -> ...
+[hypothesis] hyp_roof_clearance: The inspection pass is planned at 24.0 m over a site referenced at 12.0 m. -> ...
 [evaluation] hyp_energy_reserve: remaining_energy_wh threshold satisfied (margin +135; clear)
+[evaluation] hyp_takeoff_mass: mass_margin_kg threshold satisfied (margin +1.48; unquantified); router requests review
+[evaluation] hyp_roof_clearance: NOT EVALUATED — required capabilities have no registered provider
 
 NOT A READINESS VERDICT
 - hyp_energy_reserve: remaining_energy_wh threshold satisfied (margin +135; clear)
+- hyp_takeoff_mass: mass_margin_kg threshold satisfied (margin +1.48; unquantified); router requests review
+- hyp_roof_clearance: NOT EVALUATED — required capabilities have no registered provider
 - limitation: Results are limited to executed providers and nominal conditions.
 
 ```
@@ -92,6 +98,7 @@ Files written to `work/demo_deployment/` (git-ignored):
 | `evidence.json` | The full evidence-backed Deployment IR, with every fact's source anchor |
 | `coverage.json` | Applicability of all 32 mechanisms, with predicate evidence |
 | `generated_hypotheses.json` | Contract-validated generator output after optional accept/reject review |
+| `hypothesis_generation_audit.json` | Per-mechanism covered/missing/unmeasurable accounting after deterministic grounding checks |
 | `agent_session.json` | Persistent operator trace, questions, and evidence-bounded summary |
 | `llm_ledger.json` | Every replay/live LLM call, input references, context trace links, validation outcome, token usage, latency, and cost |
 | `tool_ledger.json` | Every bounded deterministic agent-tool call with arguments, timestamp, and result digest |

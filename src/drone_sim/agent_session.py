@@ -21,6 +21,9 @@ from drone_sim.document_extraction import (
 )
 from drone_sim.agent_tools import AgentToolRuntime
 from drone_sim.context import CandidateFact
+from drone_sim.coverage import assess_coverage
+from drone_sim.capabilities import DEFAULT_CAPABILITY_ONTOLOGY
+from drone_sim.failure_taxonomy import DEFAULT_FAILURE_TAXONOMY
 from drone_sim.golden_path import GoldenPathResult, _verdict_line, run_golden_path
 from drone_sim.hypothesis import HypothesisGenerationContract, HypothesisStatus
 from drone_sim.ir import StrictModel
@@ -35,7 +38,7 @@ from drone_sim.llm import (
     Prompt,
     StructuredOutputRunner,
 )
-from drone_sim.hypothesis_generator import generate_hypotheses
+from drone_sim.hypothesis_generator import HypothesisProposalBatch, generate_hypotheses
 from drone_sim.investigation import InvestigationState, ResultKind, TestResult
 from drone_sim.investigation_loop import InvestigationTrace, advance
 from drone_sim.llm_safety import DeploymentLLMPolicy, prepare_untrusted_text
@@ -99,7 +102,11 @@ class ReplayProvider:
         if request.task == LLMTask.EXTRACTION:
             value: object = {"proposals": self.replay.document_proposals}
         elif request.prompt.id == "session-summary":
-            value = self.replay.summary.model_dump(mode="json")
+            marker = "\nResult:\n"
+            content = request.prompt.messages[-1].content
+            if marker not in content:
+                raise ValueError("replay summary prompt has no structured result")
+            value = json.loads(content.rsplit(marker, 1)[1])
         else:
             value = self.replay.hypotheses.model_dump(mode="json")
         text = json.dumps(value)
@@ -215,7 +222,7 @@ def _state_path(work_dir: Path) -> Path:
     return work_dir / "agent_session.json"
 
 
-def _save(state: AgentSessionState, path: Path) -> None:
+def _save(state: StrictModel, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(state.model_dump_json(indent=2) + "\n")
 
@@ -354,15 +361,23 @@ def run_agent_session(
                 )
             ),
         )
-        generated = generate_hypotheses(
+        initial_coverage = assess_coverage(preliminary.evidence.deployment)
+        generation = generate_hypotheses(
             runner=hypothesis_runner, model=reasoning_model,
+            evidence=preliminary.evidence,
+            coverage=initial_coverage,
             prompt=_prompt(
                 "hypothesis-generation",
                 "Propose drone-only failure hypotheses using this JSON Schema:\n"
-                + json.dumps(HypothesisGenerationContract.model_json_schema())
-                + "\nEvidence:\n" + prepared_ir.delimited_text,
+                + json.dumps(HypothesisProposalBatch.model_json_schema())
+                + "\nEvidence:\n" + prepared_ir.delimited_text
+                + "\nCoverage:\n" + initial_coverage.model_dump_json()
+                + "\nTaxonomy:\n" + DEFAULT_FAILURE_TAXONOMY.model_dump_json()
+                + "\nCapability ontology:\n" + DEFAULT_CAPABILITY_ONTOLOGY.model_dump_json(),
             ),
         )
+        generated = generation.contract
+        _save(generation, work_dir / "hypothesis_generation_audit.json")
         generated_path = work_dir / "generated_hypotheses.json"
         reviewed = _review_hypotheses_from_contract(generated, answers, generated_path)
         result = run_golden_path(

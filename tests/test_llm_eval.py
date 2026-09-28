@@ -17,3 +17,7 @@ def test_replay_scorecard_cli_persists_and_compares_baseline(tmp_path, capsys) -
     assert main(["benchmarks/llm_baseline.json", "--baseline", "benchmarks/llm_baseline_scorecard.json", "--output", str(output), "--model", "candidate-model"]) == 0
     assert '"extraction_precision": 1.0' in capsys.readouterr().out
     assert '"candidate-model"' in output.read_text()
+    scorecard = json.loads(output.read_text())
+    assert scorecard["mechanism_coverage"] >= 0.9
+    assert scorecard["groundedness"] >= 0.95
+import json

@@ -6,7 +6,7 @@ Intended behavior lives in [`ARCHITECTURE.md`](ARCHITECTURE.md#intended-architec
 when the two disagree, this file describes reality.
 
 - **Audited at:** `d5554ba` plus the BEN-79 completion-gate change.
-- **Test suite at audit:** 188 passing (`uv run pytest`).
+- **Test suite at audit:** 191 passing (`uv run pytest`).
 - **See it run:** [`DEMO.md`](DEMO.md). **Test layers:** [`TESTING.md`](TESTING.md).
 
 Legend: ✅ implemented and working · 🟡 partial · ⚪ planned / not
@@ -22,8 +22,8 @@ mechanisms have the context they need. Through either replayed or live typed
 LLM calls, it verifies anchored document proposals, generates hypotheses, and
 plan and run a chain of built-in models: an analytical energy-reserve model,
 and a mass-envelope check. It routes each result across fidelity levels with
-written justifications. It **cannot** yet generate hypotheses, judge
-vary conditions, search for failure boundaries, run Isaac, or produce a
+written justifications. It **cannot** yet judge outcomes, vary conditions,
+search for failure boundaries, run Isaac, or produce a
 readiness report. Replay mode requires no API key; live mode reads
 `ANTHROPIC_API_KEY` only when explicitly requested.
 
@@ -215,16 +215,22 @@ All paths are under `src/drone_sim/` unless stated.
   deployment facts (for example, no precipitation means precipitation is ruled
   out). Materiality and testability come from substring heuristics on the ID.
 
-### Hypothesis contract and generation — ✅ typed edge
+### Hypothesis contract and generation — ✅ grounded typed edge
 
 - **What exists:** `FailureHypothesis` and `HypothesisGenerationContract`
   (validation, duplicate keys, `merge_duplicates`). `knowledge.py` defines
   source provenance and fact/prompt precedence.
-- **What exists:** `hypothesis_generator.generate_hypotheses` invokes replayed
-  or hosted reasoning and validates the result against the existing contract.
-  The Golden Path exercises it before deterministic planning and execution.
-- **Limitations:** knowledge retrieval is small and the generator does not yet
-  measure taxonomy-wide recall during an operator session.
+- **What exists:** `hypothesis_generator.generate_hypotheses` sends the
+  evidence envelope, applicability/unknown coverage, taxonomy, and capability
+  ontology through replayed or hosted reasoning. Deterministic post-validation
+  checks every IR path and evidence reference, rejects numeric judge
+  thresholds, merges duplicates, flags unmeasurable observables without
+  dropping them, and accounts for covered/missing mechanisms. The Golden Path
+  generates energy-reserve, takeoff-mass, and roof-clearance hypotheses and
+  persists `hypothesis_generation_audit.json` before planning.
+- **Limitations:** knowledge retrieval is still small. The holistic pass records
+  uncovered applicable mechanisms but does not automatically run follow-up
+  per-mechanism generation yet.
 - **Test:** `uv run pytest tests/test_hypothesis.py tests/test_hypothesis_generator.py tests/test_agent_session.py`
 
 ### Capability ontology, registry, and payloads — ✅

@@ -21,7 +21,7 @@ ANTHROPIC_API_KEY=... uv run drone-llm-eval benchmarks/llm_baseline.json --live 
 uv run pytest tests/test_document_extraction.py # anchored document proposals
 ```
 
-At the time of writing: 188 tests, all passing, in under a second. CI
+At the time of writing: 191 tests, all passing, in about a second. CI
 (`.github/workflows/test.yml`, job `test`) runs `uv run pytest -q` on Python
 3.13 for every pull request and every push to `main`.
 
@@ -38,6 +38,7 @@ One module or contract in isolation.
 | `test_failure_taxonomy.py` | Taxonomy completeness, unique IDs, leaf semantics |
 | `test_coverage.py` | applies / ruled_out / unknown, coverage state transitions, residual risk |
 | `test_hypothesis.py` | Hypothesis contract validation, duplicates, merging |
+| `test_hypothesis_generator.py` | Evidence/IR grounding, capability-measure checks, demo mechanism coverage, and explicit missing/unmeasurable accounting |
 | `test_knowledge.py` | Knowledge source use and fact precedence |
 | `test_llm.py` | Replay-backed Pydantic validation, bounded repair/fail-closed behavior, configuration, and typed tool declarations |
 | `test_llm_ledger.py` | Persistent call entries, replay without a provider, input/trace references, usage/cost, and explicit budget stops |
@@ -74,12 +75,13 @@ offline replay mode and asserts:
   source anchor for vehicle mass, and is left unmodified;
 - document extraction traverses the typed LLM boundary and its exact quote and
   line anchor are verified;
-- hypothesis generation traverses the typed LLM boundary, validates the
-  contract, and produces an applicable mechanism;
+- hypothesis generation traverses the typed LLM boundary, validates evidence
+  paths/candidate IDs and observables, and produces the energy-reserve,
+  takeoff-mass, and roof-clearance mechanisms without a hand-written file;
 - the energy-reserve hypothesis is planned, executed, and accepted at
   analytical fidelity, with the reserve threshold derived as 36 Wh;
-- the investigation loop records its action/result trace and stops after the
-  energy hypothesis resolves;
+- the investigation loop records action/result traces for all three generated
+  hypotheses (full stopping-policy integration is completed separately);
 - rendered output labels threshold binding and unimplemented stages;
 - CLI exit codes: `0` for the demo, `2` for a conflicting folder, and `1` for a
   work directory inside the analysed folder.
