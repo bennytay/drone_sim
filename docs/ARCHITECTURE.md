@@ -96,6 +96,12 @@ mechanisms. LLMs may propose, refine, and prioritize hypotheses, but each
 hypothesis must state its applicability, required evidence, causal mechanism,
 and testable outcome. Coverage and stopping rules remain explicit.
 
+The hypothesis contract preserves concise causal reasoning as a sequence and
+requires deployment-evidence support, an uncertainty basis, candidate test
+modalities, and both confirming and falsifying observations. It never lets an
+agent assert a quantitative pass/fail threshold; registered deterministic
+judges bind observations to versioned criteria.
+
 A versioned drone-only failure taxonomy supplies the systematic discovery
 surface. Its stable hierarchy separates broad domains, mechanism branches, and
 testable leaves. Leaves identify causal variables, observable outcomes, and the
@@ -103,6 +109,14 @@ Deployment IR context needed to assess them; they do not assert applicability
 or quantitative verdicts. Upstream aircraft and autonomy development defects
 remain outside the catalog unless deployment evidence identifies a concrete
 site- or mission-specific trigger.
+
+Applicability and coverage are a deterministic layer over that taxonomy. A
+mechanism is `applies`, `ruled_out`, or `unknown` based on recorded Deployment
+IR predicates; absent evidence remains unknown rather than becoming irrelevant.
+Applicable mechanisms begin unexamined and move to tested, uncertain, or
+escalated only through investigation results. The coverage map also records
+residual unknown risks, so catalog coverage is never misrepresented as a safety
+proof.
 
 ### Capability and model registry
 

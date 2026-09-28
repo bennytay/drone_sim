@@ -202,7 +202,42 @@ fail claims.
 show that leaf identity cannot survive normal taxonomy evolution. Extend or
 version the catalog without silently reinterpreting historical audit records.
 
-## ADR-014: Capabilities are tool-independent causal transformations
+## ADR-014: Three-valued applicability and explicit residual risk
+
+**Decision:** Determine taxonomy applicability with deterministic,
+evidence-recorded predicates that yield `applies`, `ruled_out`, or `unknown`.
+Map these to coverage states without treating unavailable context as an
+irrelevant failure branch. Preserve unexamined, tested, uncertain, escalated,
+and ruled-out coverage separately, and always retain residual unknown-risk
+records.
+
+**Rationale:** A binary relevant/not-relevant result conceals the difference
+between evidence disproving a mechanism and insufficient context to judge it.
+The three-valued result keeps the next evidence request or investigation
+auditable. Residual risk prevents broad taxonomy accounting from being
+misreported as an exhaustive safety assurance.
+
+**Revisit when:** Calibrated evidence confidence can safely supplement the
+three-valued decision while preserving an explicit unknown state and complete
+predicate provenance.
+
+## ADR-015: Falsifiable hypotheses without agent-authored verdict thresholds
+
+**Decision:** Require each failure hypothesis to reference a taxonomy leaf and
+deployment evidence, state causal variables and an expected path, name an
+affected target, preserve uncertainty and materiality, and provide qualitative
+conditions that could confirm or falsify it. Do not permit the hypothesis
+contract to establish numeric pass/fail thresholds.
+
+**Rationale:** This makes agent-generated concerns actionable by a test planner
+while preserving the deterministic boundary for readiness verdicts. A stable
+duplicate key and explicit merged records retain source provenance rather than
+silently discarding overlapping proposals.
+
+**Revisit when:** A validated capability registry can supply typed quantitative
+threshold references without letting free-form agent output define them.
+
+## ADR-016: Capabilities are tool-independent causal transformations
 
 **Decision:** Define a versioned capability ontology in which each capability
 is one causal transformation with typed canonical inputs, outputs, and named
