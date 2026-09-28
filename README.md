@@ -45,6 +45,11 @@ decision boundary, unquantified, or of unconfirmed validity, or when the
 mechanism needs closed-loop interaction or rendered sensors. Each step records
 its justification, and disagreement between fidelity levels is flagged.
 
+A version-specific trust ledger records validation datasets, residuals,
+unsupported regions, and deployment feedback so model selection weighs
+validated trust and empirical uncertainty rather than capability match alone,
+and findings outside validated regions carry an explicit confidence cap.
+
 ## Development
 
 ```bash
@@ -112,7 +117,8 @@ hypotheses become capability requirements. The provider contract is described in
 [Tool registry v0.1](docs/tool-registry-v0.1.md), and payload conventions in
 [Typed interfaces v0.1](docs/typed-interfaces-v0.1.md). Planning and execution are
 described in [Capability graph v0.1](docs/capability-graph-v0.1.md), and escalation
-rules in [Fidelity routing v0.1](docs/fidelity-routing-v0.1.md).
+rules in [Fidelity routing v0.1](docs/fidelity-routing-v0.1.md). Trust evidence is
+described in [Model trust v0.1](docs/model-trust-v0.1.md).
 
 ## Synthetic QA corpus
 

@@ -197,6 +197,14 @@ class at a time with written justifications. Disagreement between consecutive
 levels beyond their combined error is flagged for review rather than resolved
 by assuming the higher-fidelity result.
 
+A version-specific trust ledger records validation datasets, residual
+distributions, unsupported regions, deployment feedback, and drift for each
+model version and customer or deployment scope. It classifies each operating
+point as validated, extrapolated, unvalidated, or unsupported and caps finding
+confidence accordingly. Routing excludes unsupported providers, prefers better
+trust at equal fidelity, escalates untrusted results, and widens optimistic
+declared errors with empirical residual bounds.
+
 ### Deterministic judges
 
 Backends emit canonical observations and artifacts. Deterministic judges apply

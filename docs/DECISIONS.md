@@ -348,3 +348,23 @@ investigations economical while every escalation remains explainable.
 or escalation of upstream capabilities (not only the measure's producer) is
 needed to resolve boundary cases.
 
+## ADR-022: Platform-held, version-specific model trust
+
+**Decision:** Keep validation evidence in a trust ledger separate from provider
+manifests. Trust is per model version and per global, customer, or deployment
+scope, never inherited across versions. High-confidence findings require
+verified (pinned, platform-reproduced) validation coverage, sufficient residual
+samples for the measure, and no drift. Extrapolated or unvalidated results are
+capped at low confidence and escalate during routing; unsupported regions are
+excluded. Deployment feedback updates residuals and grows trust regions only
+where real outcomes exist.
+
+**Rationale:** Providers cannot certify their own credibility, and a model
+that is valid in one wind band, version, or customer fleet is not automatically
+valid elsewhere. Explicit evidence requirements keep findings defensible and
+make extrapolation visible in the readiness report.
+
+**Revisit when:** Enough deployment outcomes exist to calibrate probabilistic
+trust or to justify controlled inheritance between closely related model
+versions.
+

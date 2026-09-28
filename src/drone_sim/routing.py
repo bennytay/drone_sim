@@ -11,6 +11,7 @@ for review rather than silently resolved.
 
 from __future__ import annotations
 
+import math
 from collections.abc import Mapping
 from enum import StrEnum
 
@@ -33,6 +34,7 @@ from drone_sim.graph import (
 )
 from drone_sim.interfaces import ToolAdapter
 from drone_sim.ir import StrictModel
+from drone_sim.provenance import ConfidenceLevel
 from drone_sim.registry import (
     FidelityClass,
     OperatingContext,
@@ -40,6 +42,7 @@ from drone_sim.registry import (
     RegionStatus,
     ToolRegistry,
 )
+from drone_sim.trust import TrustLedger, TrustLevel, TrustScope
 
 
 class FidelityFloor(StrictModel):
@@ -124,6 +127,7 @@ class BoundaryStatus(StrEnum):
     NEAR_BOUNDARY = "near_boundary"
     UNQUANTIFIED = "unquantified"
     VALIDITY_UNCONFIRMED = "validity_unconfirmed"
+    UNTRUSTED = "untrusted"
     MISSING = "missing"
 
 
@@ -135,6 +139,8 @@ class BoundaryAssessment(StrictModel):
     fidelity: FidelityClass | None = None
     margin: float | None = None
     error: float | None = None
+    trust: TrustLevel | None = None
+    max_confidence: ConfidenceLevel | None = None
     reason: str
 
 
@@ -193,11 +199,13 @@ class FidelityRouter:
         tools: Mapping[str, ToolAdapter],
         policy: RoutingPolicy | None = None,
         bindings: MechanismCapabilityMap = DEFAULT_MECHANISM_CAPABILITIES,
+        trust: TrustLedger | None = None,
     ):
         self.registry = registry
         self.tools = tools
         self.policy = policy or RoutingPolicy()
         self.bindings = bindings
+        self.trust = trust
 
     def investigate(
         self,
@@ -206,7 +214,9 @@ class FidelityRouter:
         thresholds: tuple[DecisionThreshold, ...],
         initial: Mapping[DataKind, BaseModel],
         max_levels: int = 6,
+        scope: TrustScope = TrustScope(),
     ) -> RoutingOutcome:
+        self._scope = scope
         capabilities = {c.id: c for c in self.registry.ontology.capabilities}
         mechanism_floors = self.policy.floors(goal, capabilities)
         floors = {cid: floor.minimum for cid, floor in mechanism_floors.items()}
@@ -214,7 +224,9 @@ class FidelityRouter:
         for level in range(max_levels):
             selection: list[str] = []
             plan = GraphPlanner(
-                self.registry, self.bindings, self._selector(floors, mechanism_floors, selection)
+                self.registry,
+                self.bindings,
+                self._selector(floors, mechanism_floors, selection, context),
             ).plan(goal, context)
             record = execute(plan, self.tools, initial)
             assessments = tuple(
@@ -250,19 +262,24 @@ class FidelityRouter:
         floors: Mapping[str, FidelityClass],
         mechanism_floors: Mapping[str, FidelityFloor],
         selection: list[str],
+        context: OperatingContext,
     ):
         def select(
             capability: Capability, options: tuple[ProviderOption, ...]
         ) -> ProviderOption | None:
             floor = floors.get(capability.id, FidelityClass.RULE)
+            trust = {option.manifest_key: self._trust(option.manifest_key, context) for option in options}
             eligible = [
                 option
                 for option in options
-                if option.usable and option.fidelity.rank >= floor.rank
+                if option.usable
+                and option.fidelity.rank >= floor.rank
+                and trust[option.manifest_key] != TrustLevel.UNSUPPORTED
             ]
             eligible.sort(
                 key=lambda option: (
                     option.fidelity.rank,
+                    trust[option.manifest_key].rank if trust[option.manifest_key] else 0,
                     option.validity.status != RegionStatus.INSIDE,
                     option.cost.rank,
                     option.typical_runtime_s,
@@ -284,6 +301,17 @@ class FidelityRouter:
                 if option.usable and option.fidelity.rank < floor.rank
             ]
             detail = f"; bypassed lower fidelity {', '.join(skipped)}" if skipped else ""
+            level = trust[chosen.manifest_key]
+            if level is not None:
+                less_trusted = [
+                    option.manifest_key
+                    for option in eligible[1:]
+                    if option.fidelity == chosen.fidelity
+                    and trust[option.manifest_key].rank > level.rank
+                ]
+                detail += f"; trust {level.value}"
+                if less_trusted:
+                    detail += f", preferred over less-trusted {', '.join(less_trusted)}"
             selection.append(
                 f"{capability.id} -> {chosen.manifest_key} "
                 f"({chosen.fidelity.value}, {chosen.cost.value}): {why}{detail}"
@@ -291,6 +319,11 @@ class FidelityRouter:
             return chosen
 
         return select
+
+    def _trust(self, manifest_key: str, context: OperatingContext) -> TrustLevel | None:
+        if self.trust is None:
+            return None
+        return self.trust.assess(self.registry.get(manifest_key), context, self._scope).level
 
     def _assess(
         self,
@@ -334,6 +367,21 @@ class FidelityRouter:
                 ),
             )
         width = _error_width(evidence)
+        if self.trust is not None:
+            trust = self.trust.assess(
+                self.registry.get(node.provider_key), context, self._scope, threshold.measure
+            )
+            base["trust"] = trust.level
+            base["max_confidence"] = trust.max_confidence
+            if trust.error_bound is not None and math.isfinite(trust.error_bound):
+                width = max(width or 0.0, trust.error_bound)
+            if trust.level != TrustLevel.VALIDATED:
+                return BoundaryAssessment(
+                    **base,
+                    status=BoundaryStatus.UNTRUSTED,
+                    error=width,
+                    reason=f"{trust.level.value} model: {'; '.join(trust.reasons)}",
+                )
         if width is None or not evidence.fully_quantified:
             return BoundaryAssessment(
                 **base,
