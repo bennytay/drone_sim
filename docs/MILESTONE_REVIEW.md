@@ -7,7 +7,7 @@ reason.
 
 ## Runs
 
-- [x] `git pull` done; review started from `origin/main` at `d5554ba`.
+- [x] `git pull` done; final review started from `origin/main` at `ccce31f`.
 - [x] `uv sync --extra dev` succeeds.
 - [x] The Golden Path runs: `uv run drone-eval agent examples/demo_deployment --fresh`.
 - [x] Its output matches the updated `docs/DEMO.md`.
@@ -18,7 +18,7 @@ reason.
 - [x] `uv run pytest -m component` passes.
 - [x] `uv run pytest -m integration` passes.
 - [x] `uv run pytest -m golden` passes.
-- [x] CI `test` checks are green on merged BEN-64 through BEN-78 PRs; BEN-79 must be green before merge.
+- [x] CI `test` checks are green on merged BEN-64 through BEN-79 PRs, including BEN-76 PR #51 and BEN-77 PR #52.
 - [x] New behavior is exercised by the Golden layer (`test_agent_session.py`, `test_golden_path.py`).
 
 ## Documentation reflects reality
@@ -28,7 +28,7 @@ reason.
 - [x] Planned components remain labelled partial or missing.
 - [x] Every new completion claim is exercised by replay tests or the Golden Path.
 - [x] Known limitations and the remaining threshold stand-in are listed.
-- [x] Linear Done issues correspond to code merged through BEN-78; BEN-79 is the open completion gate.
+- [x] Linear marks every BEN-64 through BEN-79 issue Done, and each implementation PR is merged.
 - [x] ADR-023 records replay generation and the remaining judge stand-in.
 - [x] Drone-only scope is preserved.
 
@@ -43,8 +43,8 @@ reason.
 | Field | Value |
 |---|---|
 | Milestone | Agentic LLM Layer: Ingestion & Hypotheses |
-| Commit reviewed | `d5554ba` plus BEN-79 PR diff |
+| Commit reviewed | `ccce31f` |
 | Golden Path furthest real stage | Replayed LLM extraction → generated hypothesis → deterministic evaluation → investigation stop → bounded summary |
 | Stand-ins still in use | Threshold binding until BEN-37; recorded LLM responses in CI |
-| New known defects | None found in milestone review |
+| New known defects | None found; known limitations remain the labelled threshold binding, no deterministic judges, no boundary search, and no Isaac adapter |
 | Reviewer / date | Codex / 2026-09-28 |
