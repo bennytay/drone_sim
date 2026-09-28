@@ -12,6 +12,7 @@ LAYERS = {
         "test_context_agent.py",
         "test_conflict_assistant.py",
         "test_hypothesis_generator.py",
+        "test_knowledge_retrieval.py",
         "test_schema_mapping.py",
         "test_semantic_ranking.py",
         "test_adapters.py",
