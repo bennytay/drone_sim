@@ -43,7 +43,7 @@ LAYERS = {
         "test_routing.py",
         "test_synthetic_deployments.py",
     },
-    "golden": {"test_golden_path.py"},
+    "golden": {"test_agent_session.py", "test_golden_path.py"},
 }
 
 _LAYER_BY_FILE = {name: layer for layer, names in LAYERS.items() for name in names}

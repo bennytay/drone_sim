@@ -1,8 +1,9 @@
 # Golden Path demo
 
-One command runs every stage of the product that exists today on one fictional
-drone deployment, prints the intermediate state, and says exactly where the
-pipeline stops. What is real and what is not is summarized in the
+One command starts a persisted agent session on one fictional drone
+deployment. It reconstructs context, displays anchored facts and hypotheses,
+executes the available deterministic evaluations, and states exactly what the
+evidence does and does not establish. What is real and what is not is summarized in the
 [table below](#what-is-real-and-what-is-not); full detail is in
 [`CURRENT_STATE.md`](CURRENT_STATE.md).
 
@@ -23,17 +24,17 @@ called.
 ## 2. Run it
 
 ```bash
-uv run drone-eval analyse examples/demo_deployment --hypotheses examples/demo_hypotheses.json
+uv run drone-eval agent examples/demo_deployment
 ```
 
 Useful variants:
 
 ```bash
-# Every mechanism and every routing justification
-uv run drone-eval analyse examples/demo_deployment --hypotheses examples/demo_hypotheses.json --verbose
+# Persist answers and reject a proposed hypothesis before investigation
+uv run drone-eval agent examples/demo_deployment --answers answers.json
 
-# Without hypotheses: stops honestly after the applicability map
-uv run drone-eval analyse examples/demo_deployment
+# Run a non-demo folder with an explicit offline/replay proposal set
+uv run drone-eval agent my_deployment --replay-hypotheses hypotheses.json
 
 # A folder with contradictory evidence: stops at the readiness gate (exit code 2)
 uv run drone-eval analyse examples/synthetic_deployments/03_coastal-turbine_conflicting
@@ -50,7 +51,7 @@ stopped because the context was not ready. `1` means a usage or input error.
 | Path | Role |
 |---|---|
 | `examples/demo_deployment/` | The operator's deployment folder, treated as **read-only**. 15 small files: aircraft and payload records, flight plan, GeoJSON route, site survey, coarse OBJ envelope, forecast, autonomy config, operating limits (including battery energy and reserve), acceptance criteria, telemetry index, CSV log, and an operations brief. Operator-style labels (`aircraft`, `takeoff_mass_kg`, `flight_plan`, `acceptance_criteria`, …) exercise alias normalization. |
-| `examples/demo_hypotheses.json` | **Hand-authored** failure hypotheses. It lives outside the deployment folder so it is never ingested as operator evidence. |
+| `examples/demo_hypotheses.json` | Offline replay proposal set used by the demo. It lives outside the deployment folder so it is never ingested as operator evidence. |
 | `examples/demo_deployment.json` | Not used by the demo. It is the canonical IR fixture for unit tests. |
 
 The deployment is fictional and must never be used to authorize a flight.
@@ -60,52 +61,17 @@ The deployment is fictional and must never be used to authorize a flight.
 Abbreviated from a real run; paths depend on your checkout.
 
 ```text
-[1] Context discovery  (✅ implemented)
-  files indexed: 15; files opened: 15
-  adapters used: binary_metadata x1, csv_summary x1, json x12, text x1
-  linked vehicle 'inspectionuav01' across 4 files
+Drone deployment verification — Agent session
+[context] Examined 15 files.
+[facts] Extracted 132 anchored material facts.
+[hypothesis] hyp_energy_reserve: Forecast wind and payload mass raise route power demand. -> ...
+[evaluation] hyp_energy_reserve: remaining_energy_wh threshold satisfied (margin +135; clear)
 
-[2] Deployment IR reconstruction  (✅ implemented)
-  aircraft:   inspection-uav-01 — Example Aerospace Surveyor X (multirotor), 4.2 kg, MTOM 6.0 kg, wind limit 10.0 m/s
-  route:      6 waypoints, max 24.0 m (above_ground)
-  conditions: wind 6.5 m/s from 170.0 deg, 19.0 C, visibility 10000.0 m
-  constraint: usable-energy [energy] = 180.0 Wh
-  constraint: landing-reserve [energy] = 0.2 1
-  missing/empty optional sections: raw_data, models
-  evidence: 132 material facts, each anchored to a source; 0 with competing values
-  e.g. /vehicle/mass_kg = 4.2  <- aircraft/approved_current_aircraft.json#/aircraft/takeoff_mass_kg (json, medium confidence)
-
-[3] Context readiness gate (drone_hypothesis_generation_v1)  (✅ implemented)
-  status: READY
-
-[4] Failure-mechanism applicability (taxonomy v0.1.0)  (✅ implemented)
-  32 mechanisms: 31 applies, 1 unknown, 0 ruled out
-  - unknown   deployment_external_actors.dynamic_site.temporary_obstacle (missing /raw_data)
-
-[5] Failure hypotheses  (⚪ not implemented generator; 🟡 hand-authored input)
-  loaded 3 hand-authored hypotheses from examples/demo_hypotheses.json
-  investigation policy next action: test hyp_roof_clearance at fidelity level 0 (...)
-
-[6] Test selection, execution, and fidelity routing  (✅ implemented; thresholds: 🟡 demo wiring)
-  hyp_roof_clearance -> measures collision, minimum_clearance_m
-    GAP unproducible_input: site_geometry — geometry.site_model: no registered provider
-    routing decision: exhausted after 1 level(s); review required: yes
-  hyp_energy_reserve -> measures reserve_breach, remaining_energy_wh
-    plan: geometry.route_projection -> dynamics.vehicle_envelope -> weather.wind_field -> weather.atmosphere -> energy.route_demand -> energy.reserve_assessment
-    measure remaining_energy_wh = 171.449 ± 1.28 Wh [builtin.momentum-energy@0.1.0]
-    threshold remaining_energy_wh gte 36 Wh (from constraint landing-reserve (0.2) x usable-energy (180 Wh))
-    boundary remaining_energy_wh: clear — margin 135 exceeds the 2.57 boundary band
-    routing decision: accept after 1 level(s); review required: no
-  hyp_takeoff_mass -> measures takeoff_rejected, mass_margin_kg
-    measure mass_margin_kg = 1.480 kg [builtin.deployment-semantics@0.1.0]
-    boundary mass_margin_kg: unquantified — result or an upstream contributor has no declared error
-    routing decision: exhausted after 1 level(s); review required: yes
-
-[7] Summary of executed evaluations  (🟡 demo summary — NOT a readiness verdict)
-  hyp_roof_clearance: NOT EVALUATED — required capabilities have no registered provider
-  hyp_energy_reserve: remaining_energy_wh threshold satisfied (margin +135; clear)
-  hyp_takeoff_mass: mass_margin_kg threshold satisfied (margin +1.48; unquantified); router requests review
-  mechanisms evaluated: 3 of 31 applicable; 28 remain unexamined
+NOT A READINESS VERDICT
+- hyp_roof_clearance: NOT EVALUATED — required capabilities have no registered provider
+- hyp_energy_reserve: remaining_energy_wh threshold satisfied (margin +135; clear)
+- hyp_takeoff_mass: mass_margin_kg threshold satisfied (margin +1.48; unquantified); router requests review
+- limitation: Results are limited to executed providers and nominal conditions.
 
 Not implemented yet (the pipeline does not run these):
   ⚪ not implemented: Hypothesis generation — ...
@@ -124,7 +90,8 @@ Files written to `work/demo_deployment/` (git-ignored):
 | `context_readiness.json` | Readiness gate report |
 | `evidence.json` | The full evidence-backed Deployment IR, with every fact's source anchor |
 | `coverage.json` | Applicability of all 32 mechanisms, with predicate evidence |
-| `hypotheses.json` | The validated hypothesis contract that was used |
+| `reviewed_hypotheses.json` | Replay hypotheses after optional accept/reject review |
+| `agent_session.json` | Persistent operator trace, questions, and evidence-bounded summary |
 | `routing/<hypothesis>.json` | Plan, node records with digests, measures with lineage, boundary assessments, and justifications |
 
 ## 5. What each stage means
@@ -142,9 +109,8 @@ Files written to `work/demo_deployment/` (git-ignored):
    against the IR. Today a mechanism "applies" whenever its required IR
    sections exist.
 5. **Hypotheses.** Specific, falsifiable concerns tied to a mechanism and
-   to deployment evidence. The demo loads them from a file because no
-   generator exists yet. The investigation policy shows which one it would
-   test first.
+   deployment evidence. The demo uses an offline replay proposal set, which
+   can be accepted or rejected through an answers file before investigation.
 6. **Test selection and execution.** For each hypothesis, the planner turns
    its observables into a capability graph and binds the cheapest credible
    registered provider. It executes in-process with digests and lineage. The
@@ -160,7 +126,7 @@ Files written to `work/demo_deployment/` (git-ignored):
 |---|---|---|---|
 | Discovery, IR, provenance, readiness gate | ✅ | — | LLM ranking, conflict resolution UX |
 | Applicability map | ✅ | — | deployment-specific rule-out profiles |
-| Hypotheses | contract validation, investigation policy | `examples/demo_hypotheses.json` (hand-written) | generator |
+| Hypotheses | contract validation, replay proposal/review, investigation policy | demo replay fixture | hosted generation remains optional |
 | Capability selection and planning | ✅ `GraphPlanner` | — | — |
 | Models | ✅ rule conversion, momentum-theory energy | — | site-geometry provider, calibrated models, Isaac |
 | Execution and fidelity routing | ✅ `execute`, `FidelityRouter` | thresholds from `golden_path.bind_thresholds` | judges |

@@ -278,16 +278,15 @@ All paths are under `src/drone_sim/` unless stated.
   Path runs without a ledger.
 - **Test:** `uv run pytest tests/test_trust.py`
 
-### Investigation and stopping policies — 🟡 (unwired), 🔴 one defect
+### Agent session and investigation policy — 🟡
 
-- **What exists:** `investigation.next_action` picks the highest-materiality
-  unresolved hypothesis and proposes test, escalate, refine, follow-up, or
-  resolve. `stopping.decide_stop` stops on budget, disagreement, or
-  completion and lists residual mechanisms.
-- **Missing:** a loop that runs actions, converts routing outcomes into
-  `TestResult`s, and calls `decide_stop`. The Golden Path shows only the
-  first `next_action`.
-- **Test:** `uv run pytest tests/test_investigation.py tests/test_stopping.py`
+- **What exists:** `drone-eval agent <folder>` persists an operator trace,
+  optional JSON answers, reviewed replay hypotheses, executed evaluations,
+  and an evidence-bounded summary. `investigation_loop.advance` persists the
+  deterministic next action and result history.
+- **Missing:** hosted generation/summary writing, clarification answers that
+  change Deployment IR, and full stopping/budget integration.
+- **Test:** `uv run pytest tests/test_agent_session.py tests/test_investigation.py tests/test_investigation_loop.py`
 
 ### Not implemented — ⚪
 
@@ -310,16 +309,13 @@ All paths are under `src/drone_sim/` unless stated.
 | Command | Does |
 |---|---|
 | `uv run drone-eval analyse <folder> [--hypotheses F]` | Golden Path: every implemented stage, human-readable output, JSON artifacts in `./work/<folder>` |
+| `uv run drone-eval agent <folder> [--answers F] [--replay-hypotheses F]` | Persisted offline/replay operator session; the demo requires no key and supplies its replay fixture automatically |
 | `uv run deployment-context <folder> --state S [--output O]` | Context reconstruction only; prints evidence JSON, or a readiness report and clarifications on stderr with exit 1 |
 | `uv run deployment-ir-schema` / `deployment-evidence-schema` | Print JSON Schemas |
 
 ## Known defects and inconsistencies
 
-1. 🔴 **Hypothesis priority ordering.** `investigation.next_action` breaks
-   materiality ties with `uncertainty.value`, which is a string, so the order is
-   alphabetical: `medium` > `low` > `high`. A high-uncertainty hypothesis is
-   chosen *last* among equals. Reproduced during this audit; not fixed.
-2. 🔴 **Exact rule outputs cannot be accepted.** `graph.py` treats
+1. 🔴 **Exact rule outputs cannot be accepted.** `graph.py` treats
    rule-fidelity providers as exactly quantified, but `routing.py` needs a
    numeric error width. The demo's mass margin (+1.48 kg, computed exactly)
    is therefore reported `unquantified` / `exhausted` / "review required".
