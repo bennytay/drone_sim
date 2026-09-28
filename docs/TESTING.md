@@ -14,6 +14,7 @@ uv run pytest -m integration        # integration layer
 uv run pytest -m golden             # Golden Path product test
 uv run pytest tests/test_routing.py # one module
 uv run pytest tests/test_llm.py     # LLM replay contract tests
+uv run pytest tests/test_llm_ledger.py # ledger persistence, replay, and budgets
 ```
 
 At the time of writing: 131 tests, all passing, in under a second. CI
@@ -35,6 +36,7 @@ One module or contract in isolation.
 | `test_hypothesis.py` | Hypothesis contract validation, duplicates, merging |
 | `test_knowledge.py` | Knowledge source use and fact precedence |
 | `test_llm.py` | Replay-backed Pydantic validation, bounded repair/fail-closed behavior, configuration, and typed tool declarations |
+| `test_llm_ledger.py` | Persistent call entries, replay without a provider, input/trace references, usage/cost, and explicit budget stops |
 | `test_capabilities.py` | Ontology closure, vendor neutrality, mechanism bindings |
 | `test_registry.py` | Manifest validation, provider comparison, loading `examples/tool_manifests/` |
 | `test_interfaces.py` | Canonical payloads, frame/unit checks, built-in model calculations (energy, clearance with a fixture site) |
