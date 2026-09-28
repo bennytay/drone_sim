@@ -1,8 +1,8 @@
 from test_coverage import deployment
 from test_hypothesis import hypothesis
-from drone_sim.hypothesis import HypothesisUncertainty
 
 from drone_sim.coverage import assess_coverage
+from drone_sim.hypothesis import HypothesisUncertainty
 from drone_sim.investigation import (
     ActionKind,
     InvestigationState,
@@ -38,7 +38,13 @@ def test_inconclusive_escalates_fidelity():
 
 
 def test_uncertainty_tie_prefers_high_not_alphabetical_order():
-    low = hypothesis("hyp_low").model_copy(update={"uncertainty": HypothesisUncertainty.LOW})
-    high = hypothesis("hyp_high").model_copy(update={"uncertainty": HypothesisUncertainty.HIGH})
-    s = InvestigationState(hypotheses=(low, high), coverage=assess_coverage(deployment()))
-    assert next_action(s).hypothesis_id == "hyp_high"
+    low = hypothesis("hyp_alpha_low").model_copy(
+        update={"uncertainty": HypothesisUncertainty.LOW}
+    )
+    high = hypothesis("hyp_zeta_high").model_copy(
+        update={"uncertainty": HypothesisUncertainty.HIGH}
+    )
+    s = InvestigationState(
+        hypotheses=(low, high), coverage=assess_coverage(deployment())
+    )
+    assert next_action(s).hypothesis_id == "hyp_zeta_high"

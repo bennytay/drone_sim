@@ -314,7 +314,9 @@ Document extraction (typed replay/live LLM edge)         🟡  document_extracti
 Failure hypothesis session                               ✅  grounded replay/live generation + coverage audit
   │  optional review via answers file
   ▼
-Investigation policy + persisted trace                   🟡  investigation.py, investigation_loop.py, agent_session.py
+Investigation policy + persisted trace                   ✅  investigation.py, investigation_loop.py, golden_path.py, agent_session.py
+  │  deterministic router-result rule until judges exist; stop decision + residuals persisted
+  │  investigation_assistant.py can only propose typed future follow-ups/ranges/gap explanations
   │
   ▼
 Capability / model selection                             ✅  capabilities.py, registry.py, graph.py (GraphPlanner)
@@ -364,6 +366,7 @@ provenance ◄── context, validation, routing, trust
 validation ◄── context
 failure_taxonomy ◄── capabilities, coverage, hypothesis
 coverage ◄── applicability_assistant, hypothesis, investigation, stopping
+investigation ◄── investigation_assistant, investigation_loop
 capabilities ◄── registry, interfaces, graph, routing
 registry ◄── interfaces, reference_tools, graph, trust, routing
 interfaces ◄── reference_tools, graph, routing

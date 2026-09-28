@@ -100,6 +100,7 @@ Files written to `work/demo_deployment/` (git-ignored):
 | `generated_hypotheses.json` | Contract-validated generator output after optional accept/reject review |
 | `knowledge_bundle.json` | Provenance-qualified folder, curated platform, and model-prompt knowledge consumed by generation |
 | `hypothesis_generation_audit.json` | Per-mechanism covered/missing/unmeasurable accounting after deterministic grounding checks |
+| `investigation.json` | Ordered actions, labelled interim results, coverage-driven residual risks, and deterministic stop decision |
 | `agent_session.json` | Persistent operator trace, questions, and evidence-bounded summary |
 | `llm_ledger.json` | Every replay/live LLM call, input references, context trace links, validation outcome, token usage, latency, and cost |
 | `tool_ledger.json` | Every bounded deterministic agent-tool call with arguments, timestamp, and result digest |
@@ -132,6 +133,9 @@ Files written to `work/demo_deployment/` (git-ignored):
    fidelity router then checks whether the result is far enough from the
    threshold to accept at that fidelity, or whether it must escalate or
    report `exhausted`.
+   The investigation loop records each selected action and router outcome;
+   until judges exist, its `interim-routing-outcome-v1` rule classifies a clear
+   satisfying/failing margin or records an inconclusive/disagreement result.
 7. **Summary.** Restates the router's margins. It is explicitly **not** a
    readiness verdict, because no judge or report layer exists.
 

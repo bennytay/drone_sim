@@ -6,9 +6,12 @@ from enum import StrEnum
 
 from pydantic import Field
 
-from drone_sim.coverage import CoverageMap, Materiality
-from drone_sim.hypothesis import FailureHypothesis, HypothesisStatus
-from drone_sim.hypothesis import HypothesisUncertainty
+from drone_sim.coverage import CoverageMap, CoverageState, Materiality
+from drone_sim.hypothesis import (
+    FailureHypothesis,
+    HypothesisStatus,
+    HypothesisUncertainty,
+)
 from drone_sim.ir import StrictModel
 
 
@@ -35,6 +38,8 @@ class TestResult(StrictModel):
     summary: str = Field(min_length=1)
     fidelity: int = Field(ge=0)
     follow_up_mechanism_id: str | None = None
+    terminal: bool = False
+    determination_rule: str = "interim-routing-outcome-v1"
 
 
 class InvestigationAction(StrictModel):
@@ -56,7 +61,11 @@ _RANK = {
     Materiality.HIGH: 3,
     Materiality.CRITICAL: 4,
 }
-_UNCERTAINTY_RANK = {HypothesisUncertainty.LOW: 1, HypothesisUncertainty.MEDIUM: 2, HypothesisUncertainty.HIGH: 3}
+_UNCERTAINTY_RANK = {
+    HypothesisUncertainty.LOW: 1,
+    HypothesisUncertainty.MEDIUM: 2,
+    HypothesisUncertainty.HIGH: 3,
+}
 
 
 def next_action(state: InvestigationState) -> InvestigationAction | None:
@@ -68,7 +77,14 @@ def next_action(state: InvestigationState) -> InvestigationAction | None:
     ]
     if not candidates:
         return None
-    h = max(candidates, key=lambda x: (_RANK[x.materiality], _UNCERTAINTY_RANK[x.uncertainty]))
+    h = min(
+        candidates,
+        key=lambda item: (
+            -_RANK[item.materiality],
+            -_UNCERTAINTY_RANK[item.uncertainty],
+            item.id,
+        ),
+    )
     result = by_id.get(h.id)
     if result is None:
         return InvestigationAction(
@@ -109,10 +125,25 @@ def apply_result(state: InvestigationState, result: TestResult) -> Investigation
             continue
         status = (
             HypothesisStatus.RESOLVED
-            if result.kind == ResultKind.PASS
+            if result.terminal or result.kind == ResultKind.PASS
             else HypothesisStatus.INVESTIGATING
         )
         hypotheses.append(h.model_copy(update={"status": status}))
+    target = next(item for item in state.hypotheses if item.id == result.hypothesis_id)
+    coverage_state = (
+        CoverageState.UNCERTAIN
+        if result.kind in {ResultKind.INCONCLUSIVE, ResultKind.DISAGREEMENT}
+        else CoverageState.TESTED
+    )
+    coverage = state.coverage.record(
+        target.mechanism_id,
+        coverage_state,
+        f"{result.determination_rule}: {result.summary}",
+    )
     return state.model_copy(
-        update={"hypotheses": tuple(hypotheses), "results": (*state.results, result)}
+        update={
+            "hypotheses": tuple(hypotheses),
+            "results": (*state.results, result),
+            "coverage": coverage,
+        }
     )

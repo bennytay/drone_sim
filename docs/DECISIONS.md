@@ -461,3 +461,21 @@ ruled-out mechanism and missing evidence.
 **Revisit when:** Validated domain rule sources and comparison-between-IR-path
 predicates can express reviewed rules more directly without weakening the
 human approval and deterministic evaluation boundary.
+
+## ADR-028: Route hypotheses through one deterministic investigation loop
+
+**Decision:** Select active drone hypotheses by materiality then uncertainty,
+with stable ID ordering only after those priorities. Route each through the
+deterministic graph planner and fidelity router, convert its output with the
+explicitly labelled `interim-routing-outcome-v1` rule until judges exist,
+update the coverage map, and persist actions, results, residuals, and a
+`StopDecision` outside the LLM context.
+
+**Rationale:** Recording a batch of independent model runs after the fact does
+not make an investigation loop. One transition path gives coverage updates and
+stopping policy the same input trace, keeps the LLM out of pass/fail decisions,
+and makes replayed runs reproducible.
+
+**Revisit when:** Deterministic judges replace the interim rule, or boundary
+search can consume validated refinement ranges and feed its outcomes back into
+the same trace.

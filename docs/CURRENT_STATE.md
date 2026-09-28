@@ -5,8 +5,8 @@ derived from reading the code and running it, not from design documents.
 Intended behavior lives in [`ARCHITECTURE.md`](ARCHITECTURE.md#intended-architecture);
 when the two disagree, this file describes reality.
 
-- **Audited at:** BEN-76 applicability-rule review work (pending merge).
-- **Test suite at audit:** 198 passing (`uv run pytest`).
+- **Audited at:** BEN-77 investigation-loop work (pending merge).
+- **Test suite at audit:** 200 passing (`uv run pytest`).
 - **See it run:** [`DEMO.md`](DEMO.md). **Test layers:** [`TESTING.md`](TESTING.md).
 
 Legend: ✅ implemented and working · 🟡 partial · ⚪ planned / not
@@ -60,7 +60,7 @@ readiness report. Replay mode requires no API key; live mode reads
 | Isaac Sim / Isaac Lab integration | ⚪ | manifest JSON only | — |
 | Scenario generation | ⚪ | — | — |
 | Deterministic judges | ⚪ | — | — |
-| Investigation policy | 🟡 wired for current single-result Golden flow | `investigation.py`, `investigation_loop.py`, `agent_session.py` | `test_investigation.py`, `test_investigation_loop.py`, `test_agent_session.py` |
+| Investigation policy | ✅ traced planner/router/stopping loop | `investigation.py`, `investigation_loop.py`, `golden_path.py`, `agent_session.py` | `test_investigation.py`, `test_investigation_loop.py`, `test_agent_session.py` |
 | Stopping policy | 🟡 unwired | `stopping.py` | `test_stopping.py` |
 | Boundary / scenario search | ⚪ | — | — |
 | Readiness report (deployment verdict) | ⚪ | — | — |
@@ -327,16 +327,24 @@ All paths are under `src/drone_sim/` unless stated.
   Path runs without a ledger.
 - **Test:** `uv run pytest tests/test_trust.py`
 
-### Agent session and investigation policy — 🟡
+### Agent session and investigation policy — ✅ routed loop with interim rule
 
 - **What exists:** `drone-eval agent <folder>` persists an operator trace,
   optional JSON answers, reviewed replay hypotheses, executed evaluations,
-  and an evidence-bounded summary. `investigation_loop.advance` persists the
-  deterministic next action and result history.
-- **Missing:** the default `drone-eval agent` session does not yet invoke the
-  operator-resolution library; multi-step follow-up hypothesis creation and
-  full stopping/budget integration remain. Hosted generation and summary
-  writing exist but require explicit opt-in and a key.
+  and an evidence-bounded summary. `run_investigation` repeatedly selects the
+  highest materiality/uncertainty active hypothesis, routes it through the
+  graph planner and fidelity router, applies a labelled
+  `interim-routing-outcome-v1` result, updates `CoverageMap`, and records the
+  stopping decision plus residual risks in `investigation.json` and
+  `agent_session.json`. The demo runs all three generated hypotheses and stops
+  at its explicit three-action budget.
+- **Missing:** deterministic judges will replace the interim routing rule;
+  boundary-search refinement and model-proposed follow-up hypotheses are not
+  yet executable. `investigation_assistant.py` provides typed proposal
+  contracts for those follow-ups, variable ranges, and planning-gap
+  explanations, but they are guidance-only and do not alter the deterministic
+  loop. Hosted generation and summary writing require explicit opt-in and a
+  key.
 - **Test:** `uv run pytest tests/test_agent_session.py tests/test_investigation.py tests/test_investigation_loop.py`
 
 ### Not implemented — ⚪

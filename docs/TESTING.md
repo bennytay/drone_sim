@@ -21,7 +21,7 @@ ANTHROPIC_API_KEY=... uv run drone-llm-eval benchmarks/llm_baseline.json --live 
 uv run pytest tests/test_document_extraction.py # anchored document proposals
 ```
 
-At the time of writing: 198 tests, all passing, in about a second. CI
+At the time of writing: 200 tests, all passing, in about a second. CI
 (`.github/workflows/test.yml`, job `test`) runs `uv run pytest -q` on Python
 3.13 for every pull request and every push to `main`.
 
@@ -53,6 +53,8 @@ One module or contract in isolation.
 | `test_interfaces.py` | Canonical payloads, frame/unit checks, built-in model calculations (energy, clearance with a fixture site) |
 | `test_trust.py` | Trust ledger levels, residuals, feedback, confidence caps |
 | `test_investigation.py` | Next-action selection and escalation |
+| `test_investigation_assistant.py` | Typed replay guidance for proposed follow-ups, future refinement ranges, and actionable planning-gap explanations without a verdict channel |
+| `test_investigation_loop.py` | Persisted routed actions/results, coverage transitions, residual risks, deterministic stopping, and uncertainty-priority regression |
 | `test_stopping.py` | Stop on budget and on disagreement |
 
 ## Layer 2 — Integration tests (`-m integration`)
@@ -82,8 +84,9 @@ offline replay mode and asserts:
   takeoff-mass, and roof-clearance mechanisms without a hand-written file;
 - the energy-reserve hypothesis is planned, executed, and accepted at
   analytical fidelity, with the reserve threshold derived as 36 Wh;
-- the investigation loop records action/result traces for all three generated
-  hypotheses (full stopping-policy integration is completed separately);
+- the investigation loop routes all three generated hypotheses, records
+  terminal interim results, updated coverage, residual risks, and its explicit
+  three-action budget stop;
 - rendered output labels threshold binding and unimplemented stages;
 - CLI exit codes: `0` for the demo, `2` for a conflicting folder, and `1` for a
   work directory inside the analysed folder.
