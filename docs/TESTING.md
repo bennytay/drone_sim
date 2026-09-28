@@ -16,6 +16,8 @@ uv run pytest tests/test_routing.py # one module
 uv run pytest tests/test_llm.py     # LLM replay contract tests
 uv run pytest tests/test_llm_ledger.py # ledger persistence, replay, and budgets
 uv run drone-llm-eval benchmarks/llm_baseline.json # replay scorecard
+uv run drone-llm-eval benchmarks/llm_baseline.json --baseline benchmarks/llm_baseline_scorecard.json --output work/evals/candidate.json --model candidate-model
+ANTHROPIC_API_KEY=... uv run drone-llm-eval benchmarks/llm_baseline.json --live --model claude-sonnet-4-5 --output work/evals/live.json
 uv run pytest tests/test_document_extraction.py # anchored document proposals
 ```
 

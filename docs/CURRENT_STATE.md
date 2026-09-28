@@ -41,7 +41,7 @@ readiness report. Replay mode requires no API key; live mode reads
 | Hypothesis contract | ✅ | `hypothesis.py` | `test_hypothesis.py` |
 | LLM provider edge + call ledger | ✅ | `llm.py`, `llm_ledger.py`, `llm_cli.py` | `test_llm.py`, `test_llm_ledger.py` |
 | LLM safety boundary | ✅ | `llm_safety.py` | `test_llm_safety.py` |
-| LLM evaluation harness | 🟡 replay baseline | `llm_eval.py`, `llm_eval_cli.py` | `test_llm_eval.py` |
+| LLM evaluation harness | ✅ replay scorecard/baseline comparison · 🟡 live corpus runs | `llm_eval.py`, `llm_eval_cli.py`, `benchmarks/` | `test_llm_eval.py` |
 | Document extraction | 🟡 verified and wired for bounded demo documents | `document_extraction.py`, `agent_session.py` | `test_document_extraction.py`, `test_agent_session.py` |
 | Hypothesis **generation** | ✅ typed replay/live edge | `hypothesis_generator.py`, `agent_session.py` | `test_hypothesis_generator.py`, `test_agent_session.py`, `test_golden_path.py` |
 | Knowledge enrichment | 🟡 contract only | `knowledge.py` | `test_knowledge.py` |

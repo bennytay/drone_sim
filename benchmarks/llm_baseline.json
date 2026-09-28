@@ -4,6 +4,7 @@
   "model": "replay",
   "cases": [{
     "id": "fictional-rooftop",
+    "input": {"document":"Aircraft mass 4.2 kg. Forecast wind 6.5 m/s.","known_ir_fields":["vehicle","mission","autonomy"]},
     "expected_facts": ["vehicle.mass_kg", "conditions.wind_speed_mps"],
     "expected_mechanisms": ["environmental.wind.control_authority"],
     "expected_ir_fields": ["vehicle", "mission", "autonomy"],
