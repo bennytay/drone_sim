@@ -65,6 +65,10 @@ evidence-backed readiness report.
 7. Flag conflicts with documented architecture or decisions before proceeding.
 8. Update `docs/DECISIONS.md` when a meaningful architectural decision changes.
 
+## Linear
+
+Use only the external Linear MCP tools in the `mcp__linear__.*` namespace for all Linear work. Do not use bundled Codex Apps or Computer Use fallback for Linear.
+
 ## Git
 
 One Linear issue, one branch, one PR.
