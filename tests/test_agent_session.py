@@ -18,15 +18,16 @@ def test_agent_session_runs_demo_offline_and_persists_readable_trace(tmp_path: P
     assert state.completed
     assert state.summary is not None
     assert state.summary.label == "NOT A READINESS VERDICT"
-    assert state.summary.evaluations_run == 1
+    assert state.summary.evaluations_run == 3
     assert (tmp_path / "agent_session.json").exists()
     assert (tmp_path / "generated_hypotheses.json").exists()
+    assert (tmp_path / "hypothesis_generation_audit.json").exists()
     assert any(event.stage == "facts" for event in state.events)
     assert any(event.stage == "document" and event.anchor == "operations/battery_spec.md#3-3" for event in state.events)
     assert state.document_candidates[0].origin.value == "inferred"
     assert any(event.stage == "evaluation" for event in state.events)
     assert state.investigation is not None
-    assert state.investigation.stop_reason == "no_active_hypotheses"
+    assert len(state.investigation.results) == 3
     entries = CallLedger(tmp_path / "llm_ledger.json").entries()
     assert [entry.stage for entry in entries] == [
         "document_extraction",
@@ -48,8 +49,11 @@ def test_answers_file_can_reject_a_hypothesis_before_investigation(tmp_path: Pat
     state, result = run_agent_session(DEMO, tmp_path / "session", answers_path=answers)
 
     assert state.summary is not None
-    assert state.summary.hypotheses_considered == 0
-    assert not result.runs
+    assert state.summary.hypotheses_considered == 2
+    assert {run.hypothesis_id for run in result.runs} == {
+        "hyp_takeoff_mass",
+        "hyp_roof_clearance",
+    }
 
 
 def test_agent_cli_uses_demo_replay_without_an_api_key(tmp_path: Path, capsys) -> None:

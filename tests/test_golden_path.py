@@ -58,6 +58,12 @@ def test_hypothesised_mechanisms_are_applicable(result) -> None:
     for run in result.runs:
         assert applicability[run.mechanism_id] == ApplicabilityStatus.APPLIES
     assert result.first_action.hypothesis_id == "hyp_energy_reserve"
+    assert {run.hypothesis_id for run in result.runs} >= {
+        "hyp_energy_reserve",
+        "hyp_takeoff_mass",
+        "hyp_roof_clearance",
+    }
+    assert result.hypotheses_path.name == "generated_hypotheses.json"
 
 
 def test_energy_reserve_is_executed_and_accepted_at_analytical_fidelity(result) -> None:

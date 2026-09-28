@@ -4,9 +4,9 @@
   "model": "replay",
   "cases": [{
     "id": "fictional-rooftop",
-    "input": {"document":"Aircraft mass 4.2 kg. Forecast wind 6.5 m/s.","known_ir_fields":["vehicle","mission","autonomy"]},
+    "input": {"document":"Aircraft mass 4.2 kg against 6.0 kg maximum. Forecast wind 6.5 m/s. Route passes at 24 m over a 12 m roof reference.","known_ir_fields":["vehicle","mission","site","conditions","autonomy"]},
     "expected_facts": ["vehicle.mass_kg", "conditions.wind_speed_mps"],
-    "expected_mechanisms": ["environmental.wind.control_authority"],
+    "expected_mechanisms": ["energy_battery.reserve.route_demand","vehicle_operating_envelope.loading.mass","geometry_clearance.route.static_obstacle"],
     "expected_ir_fields": ["vehicle", "mission", "autonomy"],
     "files_opened": 3
   }],
@@ -14,8 +14,8 @@
     "id": "fictional-rooftop",
     "proposed_facts": ["vehicle.mass_kg", "conditions.wind_speed_mps"],
     "anchored_facts": ["vehicle.mass_kg", "conditions.wind_speed_mps"],
-    "proposed_mechanisms": ["environmental.wind.control_authority"],
-    "grounded_mechanisms": ["environmental.wind.control_authority"],
+    "proposed_mechanisms": ["energy_battery.reserve.route_demand","vehicle_operating_envelope.loading.mass","geometry_clearance.route.static_obstacle"],
+    "grounded_mechanisms": ["energy_battery.reserve.route_demand","vehicle_operating_envelope.loading.mass","geometry_clearance.route.static_obstacle"],
     "resolved_ir_fields": ["vehicle", "mission", "autonomy"],
     "files_opened": 3
   }]

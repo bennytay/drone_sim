@@ -25,13 +25,13 @@
           {"name": "usable_energy_wh", "deployment_path": null, "role": "document evidence"}
         ],
         "causal_path": [
-          "Forecast wind and payload mass raise route power demand.",
+          "The 6.5 m/s forecast wind and 4.2 kg takeoff mass raise route power demand.",
           "Integrated route energy consumes the usable pack energy.",
           "The landing reserve may fall below the declared fraction."
         ],
         "supporting_references": [
-          {"kind": "deployment_evidence", "reference_id": "operations/battery_spec.md#3-3", "summary": "Battery specification states 180 Wh usable energy."},
           {"kind": "deployment_evidence", "reference_id": "/conditions/wind_speed_mps", "summary": "Forecast steady wind is 6.5 m/s."},
+          {"kind": "deployment_evidence", "reference_id": "/vehicle/mass_kg", "summary": "Configured takeoff mass is 4.2 kg."},
           {"kind": "taxonomy", "reference_id": "energy_battery.reserve.route_demand", "summary": "Catalog mechanism for route energy demand."}
         ],
         "uncertainty": "medium",
@@ -40,15 +40,67 @@
         "candidate_testabilities": ["analytical", "simulation"],
         "confirm_if": [{"observable": "reserve_breach", "description": "Landing reserve falls below the declared fraction."}],
         "falsify_if": [{"observable": "remaining_energy_wh", "description": "Remaining energy exceeds the reserve at landing."}]
+      },
+      {
+        "id": "hyp_takeoff_mass",
+        "mechanism_id": "vehicle_operating_envelope.loading.mass",
+        "affected_target": "approved takeoff mass envelope",
+        "variables": [
+          {"name": "takeoff_mass_kg", "deployment_path": "/vehicle/mass_kg", "role": "cause"},
+          {"name": "max_takeoff_mass_kg", "deployment_path": "/vehicle/max_takeoff_mass_kg", "role": "limit"}
+        ],
+        "causal_path": [
+          "The configured drone mass is 4.2 kg against a 6.0 kg approved maximum.",
+          "Installed loading determines the remaining takeoff mass margin."
+        ],
+        "supporting_references": [
+          {"kind": "deployment_evidence", "reference_id": "/vehicle/mass_kg", "summary": "Configured takeoff mass is 4.2 kg."},
+          {"kind": "deployment_evidence", "reference_id": "/vehicle/max_takeoff_mass_kg", "summary": "Approved maximum takeoff mass is 6.0 kg."},
+          {"kind": "taxonomy", "reference_id": "vehicle_operating_envelope.loading.mass", "summary": "Catalog mechanism for takeoff loading."}
+        ],
+        "uncertainty": "low",
+        "uncertainty_reason": "Both configured and approved masses are directly anchored deployment facts.",
+        "materiality": "high",
+        "candidate_testabilities": ["analytical"],
+        "confirm_if": [{"observable": "takeoff_rejected", "description": "The vehicle envelope rejects the configured loading."}],
+        "falsify_if": [{"observable": "mass_margin_kg", "description": "The configured loading retains positive mass margin."}]
+      },
+      {
+        "id": "hyp_roof_clearance",
+        "mechanism_id": "geometry_clearance.route.static_obstacle",
+        "affected_target": "warehouse roof clearance",
+        "variables": [
+          {"name": "route_altitude_m", "deployment_path": "/mission/route/points/1/position/altitude_m", "role": "cause"},
+          {"name": "site_elevation_m", "deployment_path": "/site/reference_point/altitude_m", "role": "context"}
+        ],
+        "causal_path": [
+          "The inspection pass is planned at 24.0 m over a site referenced at 12.0 m.",
+          "Drone swept volume and position error can consume the nominal roof clearance."
+        ],
+        "supporting_references": [
+          {"kind": "deployment_evidence", "reference_id": "/mission/route/points/1/position/altitude_m", "summary": "The roof inspection waypoint is at 24.0 m above ground."},
+          {"kind": "deployment_evidence", "reference_id": "/site/reference_point/altitude_m", "summary": "The site reference elevation is 12.0 m mean sea level."},
+          {"kind": "taxonomy", "reference_id": "geometry_clearance.route.static_obstacle", "summary": "Catalog mechanism for static obstacle clearance."}
+        ],
+        "uncertainty": "medium",
+        "uncertainty_reason": "The route is anchored but the available site mesh has not yet established roof surface geometry.",
+        "materiality": "high",
+        "candidate_testabilities": ["geometric", "simulation"],
+        "confirm_if": [{"observable": "clearance_breach", "description": "Swept-volume evaluation reports a clearance breach."}],
+        "falsify_if": [{"observable": "minimum_clearance_m", "description": "Swept-volume evaluation retains positive obstacle clearance."}]
       }
     ]
   },
   "summary": {
     "label": "NOT A READINESS VERDICT",
     "deployment_id": "warehouse-roof-inspection-001",
-    "hypotheses_considered": 1,
-    "evaluations_run": 1,
-    "evaluation_outcomes": ["hyp_energy_reserve: remaining_energy_wh threshold satisfied (margin +135; clear)"],
+    "hypotheses_considered": 3,
+    "evaluations_run": 3,
+    "evaluation_outcomes": [
+      "hyp_energy_reserve: remaining_energy_wh threshold satisfied (margin +135; clear)",
+      "hyp_takeoff_mass: mass_margin_kg threshold satisfied (margin +1.48; unquantified); router requests review",
+      "hyp_roof_clearance: NOT EVALUATED — required capabilities have no registered provider"
+    ],
     "limitations": [
       "This evidence-bound summary is not a deployment readiness verdict.",
       "Results are limited to executed providers and nominal conditions."
