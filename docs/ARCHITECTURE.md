@@ -119,6 +119,13 @@ modalities, and both confirming and falsifying observations. It never lets an
 agent assert a quantitative pass/fail threshold; registered deterministic
 judges bind observations to versioned criteria.
 
+Versioned prompts reach hosted models only through the provider-neutral LLM
+edge. It records the selected task model and provider request identity, accepts
+typed deterministic tools, validates output directly into an existing Pydantic
+contract, asks for a bounded repair using validation errors, and then fails
+closed. A missing API key leaves the deterministic path available. Customer
+data controls and a durable call ledger are separate next stages.
+
 A versioned drone-only failure taxonomy supplies the systematic discovery
 surface. Its stable hierarchy separates broad domains, mechanism branches, and
 testable leaves. Leaves identify causal variables, observable outcomes, and the

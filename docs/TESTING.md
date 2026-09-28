@@ -13,6 +13,7 @@ uv run pytest -m component          # component layer
 uv run pytest -m integration        # integration layer
 uv run pytest -m golden             # Golden Path product test
 uv run pytest tests/test_routing.py # one module
+uv run pytest tests/test_llm.py     # LLM replay contract tests
 ```
 
 At the time of writing: 131 tests, all passing, in under a second. CI
@@ -33,6 +34,7 @@ One module or contract in isolation.
 | `test_coverage.py` | applies / ruled_out / unknown, coverage state transitions, residual risk |
 | `test_hypothesis.py` | Hypothesis contract validation, duplicates, merging |
 | `test_knowledge.py` | Knowledge source use and fact precedence |
+| `test_llm.py` | Replay-backed Pydantic validation, bounded repair/fail-closed behavior, configuration, and typed tool declarations |
 | `test_capabilities.py` | Ontology closure, vendor neutrality, mechanism bindings |
 | `test_registry.py` | Manifest validation, provider comparison, loading `examples/tool_manifests/` |
 | `test_interfaces.py` | Canonical payloads, frame/unit checks, built-in model calculations (energy, clearance with a fixture site) |
@@ -76,6 +78,22 @@ scenario variation and boundary search, the readiness report, job runtime,
 API, and UI. The Isaac manifest is validated only as registry metadata. The
 closed-loop and high-fidelity paths in `test_graph.py` and `test_routing.py`
 use in-process **stubs**, not simulators.
+
+## Hosted LLM smoke test
+
+The component tests are replay-only and make no network calls. To check the
+configured Anthropic edge against the hosted provider, use a non-production,
+least-privilege API key and run:
+
+```bash
+ANTHROPIC_API_KEY=... uv run drone-llm-smoke
+```
+
+Optional settings are `DRONE_SIM_LLM_EXTRACTION_MODEL`,
+`DRONE_SIM_LLM_HYPOTHESIS_MODEL`, `DRONE_SIM_LLM_TIMEOUT_S`, and
+`DRONE_SIM_LLM_RETRIES`. With no key, the command fails before a network call
+with a clear configuration message; the existing deterministic pipeline does
+not invoke this command or an LLM.
 
 ## Adding tests
 

@@ -390,3 +390,21 @@ more stage real or remove a stand-in.
 **Revisit when:** Hypothesis generation and judges exist (the stand-ins
 should then be deleted), or a real product entry point (API/UI, BEN-58–62)
 supersedes the CLI as the primary demo surface.
+
+## ADR-024: Provider-neutral, contract-validated hosted LLM edge
+
+**Decision:** Put hosted LLM calls behind a small provider-neutral interface
+with versioned prompts, task-selected model IDs, typed tool declarations, and
+normalized responses. Validate every structured response directly against an
+existing Pydantic contract. Return validation errors for a bounded number of
+repairs, then fail closed. Read hosted-provider configuration from the
+environment and leave all deterministic product paths usable when it is absent.
+
+**Rationale:** Agentic discovery and hypothesis work need a real model edge,
+but hosted text cannot become deployment facts, conflict resolutions, or test
+plans without a typed boundary. Recording the prompt and model identity makes
+later audit and replay possible without coupling core contracts to Anthropic.
+
+**Revisit when:** A second provider requires a broader normalized response
+model, durable call-ledger storage replaces in-memory response metadata, or
+the customer-data safety policy (BEN-66) narrows the request payload further.
