@@ -308,3 +308,22 @@ planner while preserving reproducibility.
 BVLOS routes, or a material evaluation needs spatially varying fields that
 cannot be represented by referenced grids.
 
+## ADR-020: Deterministic backward-chaining capability graphs
+
+**Decision:** Agents choose evaluation goals; a deterministic planner expands
+them backwards from measures to capabilities, binds providers through a
+pluggable selector, and expands dependencies from the chosen provider's ports.
+Plans are acyclic; closed-loop coupling is represented only inside composite
+capabilities provided as a unit. Unsatisfiable elements are explicit gaps.
+Execution records digests, lineage, failures, and uncertainty contributors
+without numerically combining errors outside a registered capability.
+
+**Rationale:** Deterministic search makes test paths reproducible and
+auditable, while provider-driven expansion avoids unnecessary upstream work.
+Explicit gaps and unquantified-contributor flags prevent silent coverage loss
+and unsupported confidence.
+
+**Revisit when:** Goals routinely need multiple providers for the same
+capability in one plan, or search over alternative providers must optimize
+global cost rather than choosing greedily per capability.
+

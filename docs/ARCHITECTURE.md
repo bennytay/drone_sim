@@ -150,6 +150,14 @@ frame, and emitted measure at the boundary. Converting Deployment IR into
 canonical payloads is a registered provider like any other; native model or
 simulator formats stay inside each adapter.
 
+A deterministic graph planner expands an evaluation goal — typically a
+hypothesis's confirm and falsify observables — backwards into capabilities,
+binds one provider per capability, and lets the chosen provider's input ports
+drive further expansion. Plans are acyclic, closed-loop composites are single
+nodes, and unsatisfiable measures, providers, or inputs are returned as explicit
+gaps. Execution records input and output digests, lineage, failures, skipped
+dependents, and per-measure uncertainty sources.
+
 ### Scenario Spec
 
 Scenario Spec is the simulator- and model-agnostic contract for a test. It
