@@ -1,12 +1,13 @@
 """Deterministic scorecards for replayed drone-LLM evaluation sets."""
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, JsonValue
 
 
 class EvaluationCase(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
     id: str
+    input: JsonValue | None = None
     expected_facts: tuple[str, ...] = ()
     expected_mechanisms: tuple[str, ...] = ()
     expected_ir_fields: tuple[str, ...] = ()

@@ -497,6 +497,24 @@ def generate(output: Path, seed: int, count: int, *, force: bool = False) -> Non
                 "layout": layout,
                 "expected_readiness": expected,
                 "deployment_id": deployment["deployment_id"],
+                "evaluation_ground_truth": {
+                    "expected_facts": [
+                        "/vehicle/mass_kg",
+                        "/vehicle/max_wind_speed_mps",
+                        "/conditions/wind_speed_mps",
+                    ],
+                    "expected_mechanisms": [
+                        "environment_weather.wind.steady_limit",
+                        "vehicle_operating_envelope.loading.mass",
+                    ],
+                    "expected_ir_fields": [
+                        "vehicle",
+                        "mission",
+                        "site",
+                        "conditions",
+                        "autonomy",
+                    ],
+                },
             }
         )
     write_json(output / "manifest.json", {"seed": seed, "deployments": manifest})

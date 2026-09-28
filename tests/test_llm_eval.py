@@ -12,6 +12,8 @@ def test_scorecard_measures_extraction_hypothesis_and_ingestion() -> None:
     assert card.mean_files_opened == 3
 
 
-def test_replay_scorecard_cli_prints_baseline_comparison(capsys) -> None:  # type: ignore[no-untyped-def]
-    assert main(["benchmarks/llm_baseline.json"]) == 0
+def test_replay_scorecard_cli_persists_and_compares_baseline(tmp_path, capsys) -> None:  # type: ignore[no-untyped-def]
+    output = tmp_path / "scorecard.json"
+    assert main(["benchmarks/llm_baseline.json", "--baseline", "benchmarks/llm_baseline_scorecard.json", "--output", str(output), "--model", "candidate-model"]) == 0
     assert '"extraction_precision": 1.0' in capsys.readouterr().out
+    assert '"candidate-model"' in output.read_text()

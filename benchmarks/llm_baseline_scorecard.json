@@ -1,0 +1,14 @@
+{
+  "anchor_accuracy": 1.0,
+  "duplicate_rate": 0.0,
+  "extraction_precision": 1.0,
+  "extraction_recall": 1.0,
+  "false_fact_rate": 0.0,
+  "field_accuracy": 1.0,
+  "groundedness": 1.0,
+  "mean_files_opened": 3.0,
+  "mechanism_coverage": 1.0,
+  "model": "replay",
+  "prompt_id": "fictional_extraction_hypothesis_v1",
+  "prompt_version": "0.1.0"
+}
