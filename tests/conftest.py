@@ -10,6 +10,7 @@ LAYERS = {
         "test_agent_tools.py",
         "test_document_extraction.py",
         "test_schema_mapping.py",
+        "test_semantic_ranking.py",
         "test_adapters.py",
         "test_capabilities.py",
         "test_coverage.py",
