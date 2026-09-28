@@ -21,7 +21,7 @@ ANTHROPIC_API_KEY=... uv run drone-llm-eval benchmarks/llm_baseline.json --live 
 uv run pytest tests/test_document_extraction.py # anchored document proposals
 ```
 
-At the time of writing: 192 tests, all passing, in about a second. CI
+At the time of writing: 198 tests, all passing, in about a second. CI
 (`.github/workflows/test.yml`, job `test`) runs `uv run pytest -q` on Python
 3.13 for every pull request and every push to `main`.
 
@@ -37,6 +37,7 @@ One module or contract in isolation.
 | `test_adapters.py` | CSV, KML, PDF, DOCX, and binary metadata adapters; bounded output; unknown formats rejected |
 | `test_failure_taxonomy.py` | Taxonomy completeness, unique IDs, leaf semantics |
 | `test_coverage.py` | applies / ruled_out / unknown, coverage state transitions, residual risk |
+| `test_applicability_assistant.py` | replayed typed applicability proposals, explicit human review gate, deterministic nominal-weather rule-outs, unknown evidence, and ready synthetic-corpus discrimination |
 | `test_hypothesis.py` | Hypothesis contract validation, duplicates, merging |
 | `test_hypothesis_generator.py` | Evidence/IR grounding, capability-measure checks, demo mechanism coverage, and explicit missing/unmeasurable accounting |
 | `test_knowledge.py` | Knowledge source use and fact precedence |

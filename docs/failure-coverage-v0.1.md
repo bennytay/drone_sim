@@ -32,5 +32,15 @@ absence of risk.
 
 The default profiles are deliberately conservative baseline rules generated
 from leaf context dependencies. They provide an exhaustive ledger for the
-current catalog. Specialized, versioned profiles can later add mechanism-
-specific activation thresholds based on validated model or regulatory evidence.
+current catalog. A replayed or hosted LLM may propose a versioned,
+deployment-bound `ApplicabilityProposalBatch`, containing only typed
+`EvidencePredicate` rules for existing drone taxonomy leaves. It has no effect
+on coverage by itself. `approve_applicability_rules` requires an explicit,
+named operator confirmation and produces a complete
+`ReviewedApplicabilityProfiles` set that can be passed to `assess_coverage`.
+The evaluator records the resulting predicate evidence deterministically.
+
+This boundary deliberately keeps rule suggestion at the agentic edge. The LLM
+cannot directly rule a mechanism out, select a test, or establish a readiness
+result. The default Golden Path remains conservative until a reviewed profile
+set is provided.
