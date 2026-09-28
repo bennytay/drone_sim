@@ -133,10 +133,13 @@ class DirectoryIndex:
         preferred = set(preferred_suffixes)
         scored = []
         for record in self.records:
-            score = lexical.get(record.path, 0) + semantic.get(record.path, 0)
+            discovery_score = lexical.get(record.path, 0) + semantic.get(record.path, 0)
+            priority, _, _ = evidence_priority(record.path, record.modified_at)
+            if semantic_ranker and discovery_score == 0 and priority == 0:
+                continue
+            score = discovery_score
             if Path(record.path).suffix.lower() in preferred:
                 score += 0.2
-            priority, _, _ = evidence_priority(record.path, record.modified_at)
             score += priority * 0.05
             scored.append((score, record))
         scored.sort(key=lambda item: (-item[0], item[1].path))
@@ -395,7 +398,11 @@ class ContextOrchestrator:
     def _resolve(self, field: str, query: str, state: DeploymentState) -> None:
         matches = self.index.search(
             query,
-            limit=max(self.candidates_per_field, len(self.index.records)),
+            limit=(
+                self.candidates_per_field
+                if self.semantic_ranker
+                else max(self.candidates_per_field, len(self.index.records))
+            ),
             semantic_ranker=self.semantic_ranker,
             preferred_suffixes=DEPENDENCY_BY_FIELD[field].preferred_suffixes,
         )

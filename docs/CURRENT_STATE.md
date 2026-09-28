@@ -6,7 +6,7 @@ Intended behavior lives in [`ARCHITECTURE.md`](ARCHITECTURE.md#intended-architec
 when the two disagree, this file describes reality.
 
 - **Audited at:** `d5554ba` plus the BEN-79 completion-gate change.
-- **Test suite at audit:** 177 passing (`uv run pytest`).
+- **Test suite at audit:** 180 passing (`uv run pytest`).
 - **See it run:** [`DEMO.md`](DEMO.md). **Test layers:** [`TESTING.md`](TESTING.md).
 
 Legend: ✅ implemented and working · 🟡 partial · ⚪ planned / not
@@ -91,7 +91,12 @@ All paths are under `src/drone_sim/` unless stated.
 - **Test:** `uv run pytest tests/test_context.py tests/test_synthetic_deployments.py`
 - **Limitations:**
   - The "context agent" is a deterministic search loop. There is no LLM.
-    `SemanticRanker` is a protocol with no implementation.
+    The opt-in `MetadataSemanticRanker` expands drone-domain path terms; the
+    opt-in `LLMSemanticRanker` performs contract-validated metadata-only
+    ranking. Both cache rankings by the full index signature, and the LLM
+    cache can persist outside the deployment folder.
+    On the demo ingestion evaluation it preserves the reconstructed IR while
+    opening 15 rather than 17 files. The default no-key path is unchanged.
   - Only JSON and GeoJSON content can become IR values. PDF, DOCX, Markdown,
     and text are used only for entity linking. CSV, KML, logs, and meshes
     become metadata summaries.
@@ -100,7 +105,8 @@ All paths are under `src/drone_sim/` unless stated.
     file.
   - Every candidate gets `origin=observed`, `confidence=medium`, and
     extraction version `"1"`. Confidence is not derived from the source.
-  - In small folders nearly every file is opened (the demo opens 15/15).
+  - The default deterministic path favors exhaustive conflict discovery; the
+    demo opens 17/17 files unless the semantic ranker is explicitly supplied.
 
 ### Parsers / source adapters — ✅
 
