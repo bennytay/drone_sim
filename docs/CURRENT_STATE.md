@@ -6,7 +6,7 @@ Intended behavior lives in [`ARCHITECTURE.md`](ARCHITECTURE.md#intended-architec
 when the two disagree, this file describes reality.
 
 - **Audited at:** `d5554ba` plus the BEN-79 completion-gate change.
-- **Test suite at audit:** 180 passing (`uv run pytest`).
+- **Test suite at audit:** 185 passing (`uv run pytest`).
 - **See it run:** [`DEMO.md`](DEMO.md). **Test layers:** [`TESTING.md`](TESTING.md).
 
 Legend: ✅ implemented and working · 🟡 partial · ⚪ planned / not
@@ -32,6 +32,7 @@ readiness report. Replay mode requires no API key; live mode reads
 | Component | Status | Code | Tests |
 |---|---|---|---|
 | Local-folder context ingestion | ✅ | `context.py` | `test_context.py`, `test_synthetic_deployments.py` |
+| Agentic context search | ✅ replay/hosted boundary · deterministic fallback retained | `context_agent.py`, `agent_tools.py` | `test_context_agent.py`, `test_agent_tools.py` |
 | Parsers / source adapters | ✅ | `adapters.py` | `test_adapters.py` |
 | Deployment IR | ✅ | `ir.py`, `schema.py` | `test_ir.py` |
 | Provenance and uncertainty | ✅ | `provenance.py`, `evidence_schema.py` | `test_provenance.py` |
@@ -74,7 +75,14 @@ All paths are under `src/drone_sim/` unless stated.
 
 ### Local-folder context ingestion — ✅
 
-- **What it does:** indexes a read-only folder by metadata. For each
+- **What it does:** indexes a read-only folder by metadata. The deterministic
+  fallback resolves each Deployment IR field in a fixed order. The opt-in
+  agentic loop starts from deterministic readiness findings, asks a
+  contract-validated LLM for one field/query action, invokes only bounded
+  registered tools, extracts candidates, and reassesses. It persists every
+  decision, tool call, candidate, and explicit stop reason. On the six-folder
+  synthetic corpus, replay preserves every expected readiness state while
+  opening 12 files versus the deterministic baseline's 29. For each
   Deployment IR top-level field, it ranks files using lexical path overlap,
   preferred suffixes, and current/stale filename signals, then opens ranked
   files through adapters. It extracts candidates through deterministic
@@ -82,24 +90,27 @@ All paths are under `src/drone_sim/` unless stated.
   parsed summaries, trace) outside the folder so a rerun resumes.
 - **Where:** `context.py` (`DirectoryIndex`, `DeterministicFileReader`,
   `StateStore`, `ContextOrchestrator`) and `reconstruction.py` (dependency
-  templates, alias normalization, entity links, clarification requests).
+  templates, alias normalization, entity links, clarification requests), plus
+  `context_agent.py` and `agent_tools.py` for the optional LLM loop.
 - **Called by:** `context_cli.py` (`deployment-context`) and `golden_path.py`
   (`drone-eval`).
 - **Calls:** `adapters.py`, `reconstruction.py`, `provenance.py`,
   `validation.py`.
 - **Run:** `uv run deployment-context examples/demo_deployment --state /tmp/s.json`
-- **Test:** `uv run pytest tests/test_context.py tests/test_synthetic_deployments.py`
+- **Test:** `uv run pytest tests/test_context.py tests/test_synthetic_deployments.py tests/test_context_agent.py`
 - **Limitations:**
-  - The "context agent" is a deterministic search loop. There is no LLM.
+  - The CLI and Golden Path continue to use the deterministic fallback. The
+    agentic loop is currently a library entry point with replay/hosted runners.
     The opt-in `MetadataSemanticRanker` expands drone-domain path terms; the
     opt-in `LLMSemanticRanker` performs contract-validated metadata-only
     ranking. Both cache rankings by the full index signature, and the LLM
     cache can persist outside the deployment folder.
     On the demo ingestion evaluation it preserves the reconstructed IR while
     opening 15 rather than 17 files. The default no-key path is unchanged.
-  - Only JSON and GeoJSON content can become IR values. PDF, DOCX, Markdown,
-    and text are used only for entity linking. CSV, KML, logs, and meshes
-    become metadata summaries.
+  - The deterministic fallback only promotes JSON/GeoJSON aliases. The agentic
+    loop can promote exact-quote PDF/DOCX/text proposals and unfamiliar JSON
+    schema mappings, but these remain inferred evidence and can therefore stop
+    at `uncertain`. CSV, logs, and meshes remain metadata summaries.
   - Route geometry in GeoJSON or KML is **not** converted into
     `mission.route`. The route must appear as waypoint objects inside a JSON
     file.

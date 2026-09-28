@@ -295,7 +295,7 @@ This is what runs today. Reproduce it with
 Local deployment folder (read-only)                     ✅  examples/demo_deployment/
   │  DirectoryIndex → ranked search → AdapterRegistry
   ▼
-Context "agent" (deterministic; no LLM)                  ✅  context.py, reconstruction.py, adapters.py
+Context search: replay/live LLM or deterministic fallback ✅  context_agent.py, context.py, agent_tools.py
   │  candidates, entity links, trace → state.json
   ▼
 Evidence-backed Deployment IR                            ✅  ir.py, provenance.py
