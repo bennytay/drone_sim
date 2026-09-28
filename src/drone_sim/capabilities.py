@@ -105,6 +105,8 @@ class Capability(StrictModel):
             raise ValueError("atomic capabilities cannot declare components")
         if len(self.measures) != len(set(self.measures)):
             raise ValueError("capability measures must be unique")
+        if self.measures and DataKind.MEASURE not in self.output_kinds:
+            raise ValueError("capabilities with measures must output a measure set")
         return self
 
     @property
@@ -287,13 +289,16 @@ def _capability(
             _port(item) if isinstance(item, str) else _port(*item) for item in items
         )
 
+    output_ports = ports(outputs)
+    if measures and DataKind.MEASURE not in {port.kind for port in output_ports}:
+        output_ports = (*output_ports, _port(*_MEASURES))
     return Capability(
         id=identifier,
         domain=CapabilityDomain(identifier.split(".", 1)[0]),
         name=name,
         description=description,
         inputs=ports(inputs),
-        outputs=ports(outputs),
+        outputs=output_ports,
         measures=measures,
         **composition,
     )
@@ -303,7 +308,7 @@ _MEASURES = ("measures", DataKind.MEASURE)
 _VIOLATIONS = ("violations", DataKind.CONSTRAINT_VIOLATION)
 
 DEFAULT_CAPABILITY_ONTOLOGY = CapabilityOntology(
-    version="0.1.0",
+    version="0.2.0",
     capabilities=(
         _capability(
             "weather.wind_field",
