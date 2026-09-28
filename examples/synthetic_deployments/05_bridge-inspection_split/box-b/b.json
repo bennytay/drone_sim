@@ -1,0 +1,18 @@
+{
+  "aircraft": {
+    "aircraft_id": "fictional-uav-899",
+    "type": "multirotor",
+    "manufacturer": "Synthetic Aeroworks",
+    "model": "Verifier-X8",
+    "takeoff_mass_kg": 5.34,
+    "max_takeoff_mass_kg": 6.39,
+    "size_m": [
+      0.89,
+      0.68,
+      0.29
+    ],
+    "max_speed_mps": 17.1,
+    "max_wind_speed_mps": 10.3,
+    "model_refs": []
+  }
+}

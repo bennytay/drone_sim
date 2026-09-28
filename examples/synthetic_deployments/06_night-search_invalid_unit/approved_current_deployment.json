@@ -1,0 +1,190 @@
+{
+  "schema_version": "0.1.0",
+  "deployment_id": "synthetic-06-night-search",
+  "vehicle": {
+    "id": "fictional-uav-146",
+    "airframe": "multirotor",
+    "manufacturer": "Synthetic Aeroworks",
+    "model": "Verifier-M6",
+    "mass_kg": 3.92,
+    "max_takeoff_mass_kg": 5.83,
+    "dimensions_m": [
+      0.64,
+      0.88,
+      0.28
+    ],
+    "max_speed_mps": 22.9,
+    "max_wind_speed_mps": 10.1,
+    "model_refs": []
+  },
+  "payloads": [
+    {
+      "id": "payload-06",
+      "kind": "lidar",
+      "mass_kg": 1.03,
+      "dimensions_m": [
+        0.18,
+        0.14,
+        0.16
+      ],
+      "model_refs": []
+    }
+  ],
+  "mission": {
+    "name": "Night Search",
+    "objective": "Search a defined area with thermal imaging",
+    "route": {
+      "points": [
+        {
+          "id": "wp-01",
+          "position": {
+            "latitude_deg": -33.713,
+            "longitude_deg": 150.311,
+            "altitude_m": 11.1,
+            "altitude_reference": "above_ground"
+          },
+          "acceptance_radius_m": 2.0,
+          "target_speed_mps": 4.6,
+          "action": "takeoff"
+        },
+        {
+          "id": "wp-02",
+          "position": {
+            "latitude_deg": -33.71288,
+            "longitude_deg": 150.31114,
+            "altitude_m": 16.1,
+            "altitude_reference": "above_ground"
+          },
+          "acceptance_radius_m": 2.0,
+          "target_speed_mps": 4.5,
+          "action": "capture_imagery"
+        },
+        {
+          "id": "wp-03",
+          "position": {
+            "latitude_deg": -33.71276,
+            "longitude_deg": 150.31128,
+            "altitude_m": 19.3,
+            "altitude_reference": "above_ground"
+          },
+          "acceptance_radius_m": 2.0,
+          "target_speed_mps": 6.0,
+          "action": "capture_imagery"
+        },
+        {
+          "id": "wp-04",
+          "position": {
+            "latitude_deg": -33.71264,
+            "longitude_deg": 150.31142,
+            "altitude_m": 24.2,
+            "altitude_reference": "above_ground"
+          },
+          "acceptance_radius_m": 2.0,
+          "target_speed_mps": 6.8,
+          "action": "capture_imagery"
+        },
+        {
+          "id": "wp-05",
+          "position": {
+            "latitude_deg": -33.71252,
+            "longitude_deg": 150.31156,
+            "altitude_m": 28.4,
+            "altitude_reference": "above_ground"
+          },
+          "acceptance_radius_m": 2.0,
+          "target_speed_mps": 6.9,
+          "action": "capture_imagery"
+        }
+      ],
+      "source": {
+        "id": "route-06",
+        "uri": "route/flight.geojson",
+        "role": "route",
+        "media_type": "application/geo+json"
+      }
+    },
+    "planned_start": "2026-10-10T21:00:00Z",
+    "planned_duration_s": 1415
+  },
+  "site": {
+    "name": "Blue Mountains sector",
+    "reference_point": {
+      "latitude_deg": -33.713,
+      "longitude_deg": 150.311,
+      "altitude_m": 100.2,
+      "altitude_reference": "mean_sea_level"
+    },
+    "artifacts": [
+      {
+        "id": "site-model-06",
+        "uri": "site/site.obj",
+        "role": "site_model",
+        "media_type": "text/plain"
+      }
+    ]
+  },
+  "conditions": {
+    "observed_at": "2026-10-10T20:30:00Z",
+    "temperature_c": 30.7,
+    "wind_speed_mps": 8.4,
+    "wind_direction_deg": 135,
+    "precipitation_mm_h": 0,
+    "visibility_m": 15000,
+    "artifacts": []
+  },
+  "autonomy": {
+    "mode": "supervised_autonomous",
+    "controller": "PX4",
+    "version": "1.9.0",
+    "config": null
+  },
+  "constraints": [
+    {
+      "id": "steady-wind-limit",
+      "category": "weather",
+      "description": "Do not launch above the approved steady wind limit",
+      "value": 10.1,
+      "unit": "mph"
+    },
+    {
+      "id": "minimum-reserve",
+      "category": "energy",
+      "description": "Minimum battery reserve at landing",
+      "value": 25,
+      "unit": "%"
+    }
+  ],
+  "success_criteria": [
+    {
+      "id": "route-completion",
+      "metric": "route_completion_ratio",
+      "operator": "gte",
+      "target": 0.98,
+      "unit": "ratio"
+    },
+    {
+      "id": "clearance",
+      "metric": "obstacle_clearance_m",
+      "operator": "gte",
+      "target": 3.0,
+      "unit": "m"
+    }
+  ],
+  "telemetry": [
+    {
+      "id": "reference-flight-06",
+      "uri": "telemetry/reference.csv",
+      "role": "telemetry",
+      "media_type": "text/csv"
+    }
+  ],
+  "raw_data": [
+    {
+      "id": "site-image-06",
+      "uri": "media/site.png",
+      "role": "other",
+      "media_type": "image/png"
+    }
+  ],
+  "models": []
+}

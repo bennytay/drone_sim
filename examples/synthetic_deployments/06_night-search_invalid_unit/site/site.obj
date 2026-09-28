@@ -1,0 +1,6 @@
+# Synthetic site envelope
+v 0 0 0
+v 20 0 33.85
+v 20 20 33.85
+v 0 20 33.85
+f 1 2 3 4

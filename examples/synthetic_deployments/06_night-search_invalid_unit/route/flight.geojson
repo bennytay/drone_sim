@@ -1,0 +1,42 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "synthetic-06-night-search",
+      "properties": {
+        "altitude_reference": "above_ground"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            150.311,
+            -33.713,
+            11.1
+          ],
+          [
+            150.31114,
+            -33.71288,
+            16.1
+          ],
+          [
+            150.31128,
+            -33.71276,
+            19.3
+          ],
+          [
+            150.31142,
+            -33.71264,
+            24.2
+          ],
+          [
+            150.31156,
+            -33.71252,
+            28.4
+          ]
+        ]
+      }
+    }
+  ]
+}

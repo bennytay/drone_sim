@@ -1,0 +1,42 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "synthetic-02-solar-farm-survey",
+      "properties": {
+        "altitude_reference": "above_ground"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            148.6011,
+            -32.2429,
+            12.1
+          ],
+          [
+            148.60124,
+            -32.24278,
+            16.9
+          ],
+          [
+            148.60138,
+            -32.24266,
+            19.7
+          ],
+          [
+            148.60152,
+            -32.24254,
+            23.6
+          ],
+          [
+            148.60166,
+            -32.24242,
+            27.0
+          ]
+        ]
+      }
+    }
+  ]
+}

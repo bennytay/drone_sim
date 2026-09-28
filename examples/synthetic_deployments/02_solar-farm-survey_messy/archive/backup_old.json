@@ -1,0 +1,191 @@
+{
+  "operator_export": {
+    "operation_id": "synthetic-02-solar-farm-survey",
+    "aircraft": {
+      "aircraft_id": "fictional-uav-353",
+      "type": "multirotor",
+      "manufacturer": "Synthetic Aeroworks",
+      "model": "Verifier-M6",
+      "takeoff_mass_kg": 4.69,
+      "max_takeoff_mass_kg": 5.87,
+      "size_m": [
+        0.69,
+        0.8,
+        0.42
+      ],
+      "max_speed_mps": 17.3,
+      "max_wind_speed_mps": 10.9,
+      "model_refs": []
+    },
+    "payload": [
+      {
+        "id": "payload-02",
+        "kind": "rgb_camera",
+        "mass_kg": 1.02,
+        "dimensions_m": [
+          0.18,
+          0.14,
+          0.16
+        ],
+        "model_refs": []
+      }
+    ],
+    "flight_plan": {
+      "title": "Solar Farm Survey",
+      "purpose": "Capture thermal imagery of solar arrays",
+      "route": {
+        "points": [
+          {
+            "id": "wp-01",
+            "position": {
+              "latitude_deg": -32.2429,
+              "longitude_deg": 148.6011,
+              "altitude_m": 12.1,
+              "altitude_reference": "above_ground"
+            },
+            "acceptance_radius_m": 2.0,
+            "target_speed_mps": 6.5,
+            "action": "takeoff"
+          },
+          {
+            "id": "wp-02",
+            "position": {
+              "latitude_deg": -32.24278,
+              "longitude_deg": 148.60124,
+              "altitude_m": 16.9,
+              "altitude_reference": "above_ground"
+            },
+            "acceptance_radius_m": 2.0,
+            "target_speed_mps": 4.0,
+            "action": "capture_imagery"
+          },
+          {
+            "id": "wp-03",
+            "position": {
+              "latitude_deg": -32.24266,
+              "longitude_deg": 148.60138,
+              "altitude_m": 19.7,
+              "altitude_reference": "above_ground"
+            },
+            "acceptance_radius_m": 2.0,
+            "target_speed_mps": 5.1,
+            "action": "capture_imagery"
+          },
+          {
+            "id": "wp-04",
+            "position": {
+              "latitude_deg": -32.24254,
+              "longitude_deg": 148.60152,
+              "altitude_m": 23.6,
+              "altitude_reference": "above_ground"
+            },
+            "acceptance_radius_m": 2.0,
+            "target_speed_mps": 6.1,
+            "action": "capture_imagery"
+          },
+          {
+            "id": "wp-05",
+            "position": {
+              "latitude_deg": -32.24242,
+              "longitude_deg": 148.60166,
+              "altitude_m": 27.0,
+              "altitude_reference": "above_ground"
+            },
+            "acceptance_radius_m": 2.0,
+            "target_speed_mps": 6.4,
+            "action": "capture_imagery"
+          }
+        ],
+        "source": {
+          "id": "route-02",
+          "uri": "route/flight.geojson",
+          "role": "route",
+          "media_type": "application/geo+json"
+        }
+      },
+      "planned_start": "2026-10-06T21:00:00Z",
+      "planned_duration_s": 2138
+    },
+    "operating_site": {
+      "name": "Dubbo solar farm",
+      "reference_point": {
+        "latitude_deg": -32.2429,
+        "longitude_deg": 148.6011,
+        "altitude_m": 115.6,
+        "altitude_reference": "mean_sea_level"
+      },
+      "artifacts": [
+        {
+          "id": "site-model-02",
+          "uri": "site/site.obj",
+          "role": "site_model",
+          "media_type": "text/plain"
+        }
+      ]
+    },
+    "weather": {
+      "observed_at": "2026-10-06T20:30:00Z",
+      "temperature_c": 17.6,
+      "wind_speed_mps": 3.9,
+      "wind_direction_deg": 342,
+      "precipitation_mm_h": 0,
+      "visibility_m": 8000,
+      "artifacts": []
+    },
+    "flight_control": {
+      "control_mode": "supervised_autonomous",
+      "flight_controller": "WaypointCore",
+      "controller_version": "1.9.5",
+      "config": null
+    },
+    "operating_limits": [
+      {
+        "id": "steady-wind-limit",
+        "category": "weather",
+        "description": "Do not launch above the approved steady wind limit",
+        "value": 10.9,
+        "unit": "m/s"
+      },
+      {
+        "id": "minimum-reserve",
+        "category": "energy",
+        "description": "Minimum battery reserve at landing",
+        "value": 25,
+        "unit": "%"
+      }
+    ],
+    "acceptance_criteria": [
+      {
+        "criterion_id": "route-completion",
+        "measure": "route_completion_ratio",
+        "operator": "gte",
+        "threshold": 0.98,
+        "unit": "ratio"
+      },
+      {
+        "criterion_id": "clearance",
+        "measure": "obstacle_clearance_m",
+        "operator": "gte",
+        "threshold": 3.0,
+        "unit": "m"
+      }
+    ],
+    "telemetry": [
+      {
+        "id": "reference-flight-02",
+        "uri": "telemetry/reference.csv",
+        "role": "telemetry",
+        "media_type": "text/csv"
+      }
+    ],
+    "raw_data": [
+      {
+        "id": "site-image-02",
+        "uri": "media/site.png",
+        "role": "other",
+        "media_type": "image/png"
+      }
+    ],
+    "models": []
+  }
+}

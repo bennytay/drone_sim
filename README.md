@@ -66,3 +66,24 @@ for readiness thresholds and conflict handling, and
 [Source adapters](docs/source-adapters-v0.1.md) for bounded parsing contracts.
 The broader search and linking loop is documented in
 [Context reconstruction](docs/context-reconstruction-v0.1.md).
+
+## Synthetic QA corpus
+
+Six reproducible fictional deployment folders live under
+`examples/synthetic_deployments`. They cover clean, renamed/messy,
+conflicting, incomplete, split-file, and invalid-unit outcomes and include
+representative GeoJSON, KML, CSV telemetry, ULog/MCAP headers, DOCX, PNG, and
+OBJ artifacts. They are test data only and must never authorize a real flight.
+
+Regenerate them deterministically with:
+
+```bash
+uv run python tools/generate_fake_deployments.py \
+  --output examples/synthetic_deployments \
+  --seed 20260928 \
+  --count 6 \
+  --force
+```
+
+The corpus manifest declares the expected readiness of each folder, and the
+test suite runs every folder through the real context orchestrator.
