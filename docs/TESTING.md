@@ -37,6 +37,7 @@ One module or contract in isolation.
 | `test_knowledge.py` | Knowledge source use and fact precedence |
 | `test_llm.py` | Replay-backed Pydantic validation, bounded repair/fail-closed behavior, configuration, and typed tool declarations |
 | `test_llm_ledger.py` | Persistent call entries, replay without a provider, input/trace references, usage/cost, and explicit budget stops |
+| `test_llm_safety.py` | Adversarial-text delimiting, redaction, disabled-call behavior, ledger payload hashes, and forbidden decision contracts |
 | `test_capabilities.py` | Ontology closure, vendor neutrality, mechanism bindings |
 | `test_registry.py` | Manifest validation, provider comparison, loading `examples/tool_manifests/` |
 | `test_interfaces.py` | Canonical payloads, frame/unit checks, built-in model calculations (energy, clearance with a fixture site) |

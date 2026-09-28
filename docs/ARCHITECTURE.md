@@ -126,6 +126,14 @@ contract, asks for a bounded repair using validation errors, and then fails
 closed. A missing API key leaves the deterministic path available. Customer
 data controls are a separate safety stage.
 
+Operator files are untrusted evidence, never instructions. Before a hosted
+call, deployment policy must allow it; configured patterns are redacted and
+the remaining text is explicitly delimited. The ledger records the hash of the
+exact delimited payload. LLM output is only a typed proposal: conflict
+resolution, thresholds, and deterministic judgments remain unavailable as LLM
+contracts; inferred evidence must retain an anchor whose hash matches checked
+source bytes.
+
 Every edge invocation also receives a persistent ledger entry: prompt and
 request hashes, model, explicit candidate/file-hash references, linked context
 trace indices, response, usage, latency, cost, validation outcome, and live or
