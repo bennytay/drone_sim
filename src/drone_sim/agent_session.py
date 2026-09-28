@@ -20,6 +20,7 @@ from drone_sim.document_extraction import (
     extract_document_candidates,
 )
 from drone_sim.agent_tools import AgentToolRuntime
+from drone_sim.context import CandidateFact
 from drone_sim.golden_path import GoldenPathResult, _verdict_line, run_golden_path
 from drone_sim.hypothesis import HypothesisGenerationContract, HypothesisStatus
 from drone_sim.ir import StrictModel
@@ -78,6 +79,7 @@ class AgentSessionState(StrictModel):
     questions: tuple[SessionQuestion, ...] = ()
     summary: SessionSummary | None = None
     investigation: InvestigationTrace | None = None
+    document_candidates: tuple[CandidateFact, ...] = ()
     completed: bool = False
 
 
@@ -236,6 +238,7 @@ def run_agent_session(
         raise ValueError("work directory must be outside the read-only deployment folder")
     answers = _read_answers(answers_path)
     document_events: list[SessionEvent] = []
+    document_candidates: tuple[CandidateFact, ...] = ()
     usable_energy_wh: float | None = None
     if not live and replay_path is None and root.name != "demo_deployment":
         raise ValueError("no replay supplied; use --replay FILE for offline sessions")
@@ -324,6 +327,7 @@ def run_agent_session(
                 ),
                 field="constraints", source_bytes=source_bytes,
             )
+            document_candidates = extracted
             if extracted and isinstance(extracted[0].value, int | float):
                 usable_energy_wh = float(extracted[0].value)
             document_events = [
@@ -470,6 +474,7 @@ def run_agent_session(
         questions=questions,
         summary=summary,
         investigation=investigation,
+        document_candidates=document_candidates,
         completed=not result.stopped_at_context,
     )
     _save(state, _state_path(work_dir))
