@@ -96,6 +96,14 @@ mechanisms. LLMs may propose, refine, and prioritize hypotheses, but each
 hypothesis must state its applicability, required evidence, causal mechanism,
 and testable outcome. Coverage and stopping rules remain explicit.
 
+A versioned drone-only failure taxonomy supplies the systematic discovery
+surface. Its stable hierarchy separates broad domains, mechanism branches, and
+testable leaves. Leaves identify causal variables, observable outcomes, and the
+Deployment IR context needed to assess them; they do not assert applicability
+or quantitative verdicts. Upstream aircraft and autonomy development defects
+remain outside the catalog unless deployment evidence identifies a concrete
+site- or mission-specific trigger.
+
 ### Capability and model registry
 
 The registry describes available parsers, analytical models, geometry checks,
