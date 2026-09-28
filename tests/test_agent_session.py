@@ -4,6 +4,7 @@ from pathlib import Path
 from drone_sim.agent_session import run_agent_session
 from drone_sim.golden_path import main
 from drone_sim.llm_ledger import CallLedger, LedgerMode
+from drone_sim.llm_safety import DeploymentLLMPolicy
 
 
 EXAMPLES = Path(__file__).parents[1] / "examples"
@@ -58,8 +59,19 @@ def test_agent_cli_uses_demo_replay_without_an_api_key(tmp_path: Path, capsys) -
 
 def test_live_mode_fails_before_network_without_explicit_key(tmp_path: Path, capsys, monkeypatch) -> None:
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    policy = tmp_path / "policy.json"
+    policy.write_text(DeploymentLLMPolicy(allow_hosted_llm=True).model_dump_json())
 
-    code = main(["agent", str(DEMO), "--live", "--work-dir", str(tmp_path)])
+    code = main(["agent", str(DEMO), "--live", "--llm-policy", str(policy), "--work-dir", str(tmp_path / "work")])
 
     assert code == 1
     assert "set ANTHROPIC_API_KEY" in capsys.readouterr().err
+
+
+def test_disabled_hosted_policy_runs_deterministic_pipeline_and_sends_nothing(tmp_path: Path) -> None:
+    state, result = run_agent_session(DEMO, tmp_path, live=True)
+
+    assert result.readiness.ready
+    assert state.completed
+    assert state.events[0].stage == "policy"
+    assert not (tmp_path / "llm_ledger.json").exists()

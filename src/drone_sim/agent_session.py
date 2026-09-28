@@ -224,6 +224,7 @@ def run_agent_session(
     answers_path: Path | None = None,
     replay_path: Path | None = None,
     live: bool = False,
+    llm_policy: DeploymentLLMPolicy = DeploymentLLMPolicy(),
     fresh: bool = False,
 ) -> tuple[AgentSessionState, GoldenPathResult]:
     """Run or resume one offline/replay agent session and persist its trace."""
@@ -242,6 +243,30 @@ def run_agent_session(
     # Reconstruct before the agent sees any deployment data. This is also the
     # resume boundary: context state is deterministic and persisted separately.
     preliminary = run_golden_path(root, work_dir, fresh=fresh)
+    if live and not llm_policy.allow_hosted_llm:
+        state = AgentSessionState(
+            root=str(root),
+            events=(
+                SessionEvent(
+                    timestamp=_now(),
+                    stage="policy",
+                    message="Hosted LLM calls are disabled; deterministic context and applicability completed without sending customer bytes.",
+                ),
+            ),
+            summary=SessionSummary(
+                deployment_id=(
+                    preliminary.evidence.deployment.deployment_id
+                    if preliminary.evidence else None
+                ),
+                limitations=(
+                    "Hosted LLM calls were disabled by deployment policy.",
+                    "No hypotheses or deployment readiness verdict were produced.",
+                ),
+            ),
+            completed=True,
+        )
+        _save(state, _state_path(work_dir))
+        return state, preliminary
     file_references = tuple(
         InputReference(
             kind="deployment_file",
@@ -268,7 +293,14 @@ def run_agent_session(
             prepared = prepare_untrusted_text(
                 source_path="operations/battery_spec.md",
                 text=source_bytes.decode("utf-8"),
-                policy=DeploymentLLMPolicy(allow_hosted_llm=True),
+                policy=(
+                    llm_policy
+                    if live
+                    else DeploymentLLMPolicy(
+                        allow_hosted_llm=True,
+                        redaction_patterns=llm_policy.redaction_patterns,
+                    )
+                ),
             )
             extracted = extract_document_candidates(
                 runner=extraction_runner, model=extraction_model,
@@ -297,7 +329,14 @@ def run_agent_session(
         prepared_ir = prepare_untrusted_text(
             source_path="evidence.json",
             text=preliminary.evidence.model_dump_json(),
-            policy=DeploymentLLMPolicy(allow_hosted_llm=True),
+            policy=(
+                llm_policy
+                if live
+                else DeploymentLLMPolicy(
+                    allow_hosted_llm=True,
+                    redaction_patterns=llm_policy.redaction_patterns,
+                )
+            ),
         )
         generated = generate_hypotheses(
             runner=hypothesis_runner, model=reasoning_model,
