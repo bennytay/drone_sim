@@ -18,8 +18,8 @@ evidence does and does not establish. What is real and what is not is summarized
 uv sync --extra dev
 ```
 
-No GPU, network access, Isaac installation, or API key is needed. No LLM is
-called.
+No GPU, network access, Isaac installation, or API key is needed. Recorded
+responses exercise the LLM contracts without making a hosted call.
 
 ## 2. Run it
 
@@ -33,8 +33,11 @@ Useful variants:
 # Persist answers and reject a proposed hypothesis before investigation
 uv run drone-eval agent examples/demo_deployment --answers answers.json
 
-# Run a non-demo folder with an explicit offline/replay proposal set
-uv run drone-eval agent my_deployment --replay-hypotheses hypotheses.json
+# Run a non-demo folder with recorded LLM responses
+uv run drone-eval agent my_deployment --replay session_replay.json
+
+# Manual hosted verification (uses your explicitly supplied key)
+ANTHROPIC_API_KEY=... uv run drone-eval agent examples/demo_deployment --live --fresh
 
 # A folder with contradictory evidence: stops at the readiness gate (exit code 2)
 uv run drone-eval analyse examples/synthetic_deployments/03_coastal-turbine_conflicting
@@ -50,8 +53,9 @@ stopped because the context was not ready. `1` means a usage or input error.
 
 | Path | Role |
 |---|---|
-| `examples/demo_deployment/` | The operator's deployment folder, treated as **read-only**. 15 small files: aircraft and payload records, flight plan, GeoJSON route, site survey, coarse OBJ envelope, forecast, autonomy config, operating limits (including battery energy and reserve), acceptance criteria, telemetry index, CSV log, and an operations brief. Operator-style labels (`aircraft`, `takeoff_mass_kg`, `flight_plan`, `acceptance_criteria`, …) exercise alias normalization. |
-| `examples/demo_hypotheses.json` | Offline replay proposal set used by the demo. It lives outside the deployment folder so it is never ingested as operator evidence. |
+| `examples/demo_deployment/` | The operator's deployment folder, treated as **read-only**. It includes aircraft and payload records, flight plan, route, site survey, coarse geometry, forecast, autonomy config, operating limits, acceptance criteria, telemetry, and operator documents. |
+| `examples/replays/demo_agent_replay.json` | Recorded typed LLM responses for document extraction, hypothesis generation, and summary writing in CI. |
+| `examples/demo_deployment/operations/battery_spec.md` | Document-only battery fact. The replay extraction must quote and anchor line 3 exactly. |
 | `examples/demo_deployment.json` | Not used by the demo. It is the canonical IR fixture for unit tests. |
 
 The deployment is fictional and must never be used to authorize a flight.
@@ -62,24 +66,16 @@ Abbreviated from a real run; paths depend on your checkout.
 
 ```text
 Drone deployment verification — Agent session
-[context] Examined 15 files.
-[facts] Extracted 132 anchored material facts.
+[context] Examined the deployment files.
+[facts] Extracted 127 anchored material facts.
+[document] Verified document fact 180 from operations/battery_spec.md#3-3.
 [hypothesis] hyp_energy_reserve: Forecast wind and payload mass raise route power demand. -> ...
 [evaluation] hyp_energy_reserve: remaining_energy_wh threshold satisfied (margin +135; clear)
 
 NOT A READINESS VERDICT
-- hyp_roof_clearance: NOT EVALUATED — required capabilities have no registered provider
 - hyp_energy_reserve: remaining_energy_wh threshold satisfied (margin +135; clear)
-- hyp_takeoff_mass: mass_margin_kg threshold satisfied (margin +1.48; unquantified); router requests review
 - limitation: Results are limited to executed providers and nominal conditions.
 
-Not implemented yet (the pipeline does not run these):
-  ⚪ not implemented: Hypothesis generation — ...
-  ⚪ not implemented: Deterministic judges — ...
-  ...
-Artifacts written:
-  .../work/demo_deployment/state.json
-  ...
 ```
 
 Files written to `work/demo_deployment/` (git-ignored):
@@ -90,7 +86,7 @@ Files written to `work/demo_deployment/` (git-ignored):
 | `context_readiness.json` | Readiness gate report |
 | `evidence.json` | The full evidence-backed Deployment IR, with every fact's source anchor |
 | `coverage.json` | Applicability of all 32 mechanisms, with predicate evidence |
-| `reviewed_hypotheses.json` | Replay hypotheses after optional accept/reject review |
+| `generated_hypotheses.json` | Contract-validated generator output after optional accept/reject review |
 | `agent_session.json` | Persistent operator trace, questions, and evidence-bounded summary |
 | `routing/<hypothesis>.json` | Plan, node records with digests, measures with lineage, boundary assessments, and justifications |
 
@@ -126,7 +122,7 @@ Files written to `work/demo_deployment/` (git-ignored):
 |---|---|---|---|
 | Discovery, IR, provenance, readiness gate | ✅ | — | LLM ranking, conflict resolution UX |
 | Applicability map | ✅ | — | deployment-specific rule-out profiles |
-| Hypotheses | contract validation, replay proposal/review, investigation policy | demo replay fixture | hosted generation remains optional |
+| Hypotheses | typed generator, validation, review, and investigation policy | recorded provider response in CI | hosted run is opt-in |
 | Capability selection and planning | ✅ `GraphPlanner` | — | — |
 | Models | ✅ rule conversion, momentum-theory energy | — | site-geometry provider, calibrated models, Isaac |
 | Execution and fidelity routing | ✅ `execute`, `FidelityRouter` | thresholds from `golden_path.bind_thresholds` | judges |
@@ -149,7 +145,7 @@ Files written to `work/demo_deployment/` (git-ignored):
 
 ```bash
 rm -rf work/demo_deployment
-uv run drone-eval analyse examples/demo_deployment --hypotheses examples/demo_hypotheses.json
+uv run drone-eval agent examples/demo_deployment
 ```
 
 Or keep the directory and pass `--fresh`. The demo never writes into

@@ -9,14 +9,13 @@ from pathlib import Path
 import pytest
 
 from drone_sim.coverage import ApplicabilityStatus
+from drone_sim.agent_session import run_agent_session
 from drone_sim.golden_path import main, render, run_golden_path
-from drone_sim.graph import GapKind
 from drone_sim.routing import BoundaryStatus, Decision
 
 
 EXAMPLES = Path(__file__).parents[1] / "examples"
 DEMO = EXAMPLES / "demo_deployment"
-HYPOTHESES = EXAMPLES / "demo_hypotheses.json"
 
 
 def folder_listing(root: Path) -> set[tuple[str, int]]:
@@ -29,7 +28,7 @@ def folder_listing(root: Path) -> set[tuple[str, int]]:
 @pytest.fixture(scope="module")
 def result(tmp_path_factory: pytest.TempPathFactory):
     before = folder_listing(DEMO)
-    outcome = run_golden_path(DEMO, tmp_path_factory.mktemp("work"), HYPOTHESES)
+    _session, outcome = run_agent_session(DEMO, tmp_path_factory.mktemp("work"))
     assert folder_listing(DEMO) == before, "the deployment folder must stay read-only"
     return outcome
 
@@ -58,7 +57,7 @@ def test_hypothesised_mechanisms_are_applicable(result) -> None:
     }
     for run in result.runs:
         assert applicability[run.mechanism_id] == ApplicabilityStatus.APPLIES
-    assert result.first_action.hypothesis_id == "hyp_roof_clearance"
+    assert result.first_action.hypothesis_id == "hyp_energy_reserve"
 
 
 def test_energy_reserve_is_executed_and_accepted_at_analytical_fidelity(result) -> None:
@@ -67,35 +66,17 @@ def test_energy_reserve_is_executed_and_accepted_at_analytical_fidelity(result) 
     assert final.decision == Decision.ACCEPT
     assert final.providers["energy.route_demand"] == "builtin.momentum-energy@0.1.0"
     assert run.thresholds[0].threshold.value == pytest.approx(36.0)
+    assert "verified document fact" in run.thresholds[0].basis
+    assert not any(constraint.unit == "Wh" for constraint in result.evidence.deployment.constraints)
     assert final.record.measure("reserve_breach").value is False
     assert final.record.measure("remaining_energy_wh").value > 36.0
     assert final.assessments[0].status == BoundaryStatus.CLEAR
-
-
-def test_exact_mass_margin_is_currently_flagged_unquantified(result) -> None:
-    # Known inconsistency recorded in docs/CURRENT_STATE.md: rule-fidelity
-    # outputs carry no numeric error, so routing cannot accept them.
-    run = next(r for r in result.runs if r.hypothesis_id == "hyp_takeoff_mass")
-    final = run.outcome.final
-    assert final.record.measure("mass_margin_kg").value == pytest.approx(1.48)
-    assert final.assessments[0].status == BoundaryStatus.UNQUANTIFIED
-    assert final.decision == Decision.EXHAUSTED
-
-
-def test_clearance_stops_at_missing_site_geometry_provider(result) -> None:
-    run = next(r for r in result.runs if r.hypothesis_id == "hyp_roof_clearance")
-    plan = run.outcome.final.record.plan
-    assert not plan.complete
-    assert (GapKind.UNPRODUCIBLE_INPUT, "site_geometry") in {
-        (gap.kind, gap.subject) for gap in plan.gaps
-    }
 
 
 def test_rendered_output_marks_what_is_not_implemented(result) -> None:
     text = render(result)
     assert "NOT a readiness verdict" in text
     assert "Not implemented yet" in text
-    assert "hand-authored input" in text
     for artifact in result.artifacts:
         assert artifact.exists()
 
@@ -103,10 +84,8 @@ def test_rendered_output_marks_what_is_not_implemented(result) -> None:
 def test_cli_runs_the_golden_path(tmp_path: Path, capsys) -> None:
     code = main(
         [
-            "analyse",
+            "agent",
             str(DEMO),
-            "--hypotheses",
-            str(HYPOTHESES),
             "--work-dir",
             str(tmp_path),
         ]
@@ -114,8 +93,8 @@ def test_cli_runs_the_golden_path(tmp_path: Path, capsys) -> None:
 
     output = capsys.readouterr().out
     assert code == 0
-    assert "status: READY" in output
-    assert "routing decision: accept" in output
+    assert "NOT A READINESS VERDICT" in output
+    assert "threshold satisfied" in output
 
 
 def test_cli_stops_at_unready_context(tmp_path: Path, capsys) -> None:

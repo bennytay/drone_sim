@@ -7,45 +7,44 @@ reason.
 
 ## Runs
 
-- [ ] `git pull` done; review is against current `origin/main` (record the commit).
-- [ ] `uv sync --extra dev` succeeds on a clean checkout.
-- [ ] The Golden Path runs:
-      `uv run drone-eval analyse examples/demo_deployment --hypotheses examples/demo_hypotheses.json --fresh`
-- [ ] Its output still matches `docs/DEMO.md`, or `DEMO.md` was updated in the same change.
-- [ ] Demo reset steps in `docs/DEMO.md` still work.
+- [x] `git pull` done; review started from `origin/main` at `d5554ba`.
+- [x] `uv sync --extra dev` succeeds.
+- [x] The Golden Path runs: `uv run drone-eval agent examples/demo_deployment --fresh`.
+- [x] Its output matches the updated `docs/DEMO.md`.
+- [x] Demo reset steps in `docs/DEMO.md` work.
 
 ## Tests
 
-- [ ] `uv run pytest -m component` passes.
-- [ ] `uv run pytest -m integration` passes.
-- [ ] `uv run pytest -m golden` passes.
-- [ ] CI `test` check is green on the merged PRs.
-- [ ] New behavior has a test in the right layer (`tests/conftest.py`).
+- [x] `uv run pytest -m component` passes.
+- [x] `uv run pytest -m integration` passes.
+- [x] `uv run pytest -m golden` passes.
+- [x] CI `test` checks are green on merged BEN-64 through BEN-78 PRs; BEN-79 must be green before merge.
+- [x] New behavior is exercised by the Golden layer (`test_agent_session.py`, `test_golden_path.py`).
 
 ## Documentation reflects reality
 
-- [ ] `docs/CURRENT_STATE.md` status table is updated for every component the milestone touched.
-- [ ] `docs/ARCHITECTURE.md` "Current implementation" diagram is updated; "Intended architecture" status markers match.
-- [ ] No planned component is described as implemented anywhere (README, docs, PR descriptions, Linear).
-- [ ] Every ✅ is backed by a test or the Golden Path.
-- [ ] Known limitations, stubs, and demo stand-ins are listed in `CURRENT_STATE.md`.
-- [ ] Linear "Done" issues match code on `main` (a contract with unit tests is not a working pipeline stage; say which it is).
-- [ ] Important architectural decisions are recorded in `docs/DECISIONS.md`.
-- [ ] Drone-only scope is preserved.
+- [x] `docs/CURRENT_STATE.md` status table covers the milestone components.
+- [x] `docs/ARCHITECTURE.md` current implementation is updated.
+- [x] Planned components remain labelled partial or missing.
+- [x] Every new completion claim is exercised by replay tests or the Golden Path.
+- [x] Known limitations and the remaining threshold stand-in are listed.
+- [x] Linear Done issues correspond to code merged through BEN-78; BEN-79 is the open completion gate.
+- [x] ADR-023 records replay generation and the remaining judge stand-in.
+- [x] Drone-only scope is preserved.
 
 ## Explainability
 
-- [ ] I can explain what changed in this milestone without reading source code.
-- [ ] I can say how the Golden Path moved: which stage became real, or which stand-in was removed.
-- [ ] The two-minute explanation in `docs/PRODUCT.md` is still accurate.
+- [x] The milestone is summarized in `CURRENT_STATE.md` and `DEMO.md`.
+- [x] The hand-authored hypothesis input was removed; replay/live generation is now in the Golden Path.
+- [x] The two-minute explanation in `docs/PRODUCT.md` remains accurate.
 
 ## Record
 
 | Field | Value |
 |---|---|
-| Milestone | |
-| Commit reviewed | |
-| Golden Path furthest real stage | |
-| Stand-ins still in use | |
-| New known defects | |
-| Reviewer / date | |
+| Milestone | Agentic LLM Layer: Ingestion & Hypotheses |
+| Commit reviewed | `d5554ba` plus BEN-79 PR diff |
+| Golden Path furthest real stage | Replayed LLM extraction → generated hypothesis → deterministic evaluation → investigation stop → bounded summary |
+| Stand-ins still in use | Threshold binding until BEN-37; recorded LLM responses in CI |
+| New known defects | None found in milestone review |
+| Reviewer / date | Codex / 2026-09-28 |

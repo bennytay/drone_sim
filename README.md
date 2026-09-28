@@ -7,7 +7,7 @@ verifying whether a known-working UAV is ready for that deployment.
 
 ```bash
 uv sync --extra dev
-uv run drone-eval analyse examples/demo_deployment --hypotheses examples/demo_hypotheses.json
+uv run drone-eval agent examples/demo_deployment
 uv run pytest
 ```
 

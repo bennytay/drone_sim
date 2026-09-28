@@ -5,8 +5,8 @@ derived from reading the code and running it, not from design documents.
 Intended behavior lives in [`ARCHITECTURE.md`](ARCHITECTURE.md#intended-architecture);
 when the two disagree, this file describes reality.
 
-- **Audited at:** `b2f7e81` (BEN-17) plus the Golden Path layer added on top.
-- **Test suite at audit:** 152 passing (`uv run pytest`).
+- **Audited at:** `d5554ba` plus the BEN-79 completion-gate change.
+- **Test suite at audit:** 168 passing (`uv run pytest`).
 - **See it run:** [`DEMO.md`](DEMO.md). **Test layers:** [`TESTING.md`](TESTING.md).
 
 Legend: ✅ implemented and working · 🟡 partial · ⚪ planned / not
@@ -14,18 +14,18 @@ implemented · 🔴 broken or known defect.
 
 ## One-paragraph summary
 
-Given a folder of drone deployment files, the code can deterministically
+Given a folder of drone deployment files, the agent session can
 reconstruct an evidence-backed Deployment IR, where every value is traced to an
 exact source location. It can then decide whether that context is complete
 enough to reason about, and mark which of 32 catalogued drone failure
-mechanisms have the context they need. Given a hand-written hypothesis, it can
+mechanisms have the context they need. Through either replayed or live typed
+LLM calls, it verifies anchored document proposals, generates hypotheses, and
 plan and run a chain of built-in models: an analytical energy-reserve model,
 and a mass-envelope check. It routes each result across fidelity levels with
 written justifications. It **cannot** yet generate hypotheses, judge
-pass/fail, vary conditions, search for failure boundaries, run Isaac, or
-produce a readiness report. The LLM provider edge is implemented but is not
-wired into a product stage; without `ANTHROPIC_API_KEY`, all product behavior
-remains deterministic.
+vary conditions, search for failure boundaries, run Isaac, or produce a
+readiness report. Replay mode requires no API key; live mode reads
+`ANTHROPIC_API_KEY` only when explicitly requested.
 
 ## Status table
 
@@ -42,8 +42,8 @@ remains deterministic.
 | LLM provider edge + call ledger | ✅ | `llm.py`, `llm_ledger.py`, `llm_cli.py` | `test_llm.py`, `test_llm_ledger.py` |
 | LLM safety boundary | ✅ | `llm_safety.py` | `test_llm_safety.py` |
 | LLM evaluation harness | 🟡 replay baseline | `llm_eval.py`, `llm_eval_cli.py` | `test_llm_eval.py` |
-| Document extraction | 🟡 verified replay contract | `document_extraction.py` | `test_document_extraction.py` |
-| Hypothesis **generation** | ⚪ | — | — |
+| Document extraction | 🟡 verified and wired for bounded demo documents | `document_extraction.py`, `agent_session.py` | `test_document_extraction.py`, `test_agent_session.py` |
+| Hypothesis **generation** | ✅ typed replay/live edge | `hypothesis_generator.py`, `agent_session.py` | `test_hypothesis_generator.py`, `test_agent_session.py`, `test_golden_path.py` |
 | Knowledge enrichment | 🟡 contract only | `knowledge.py` | `test_knowledge.py` |
 | Capability ontology + mechanism bindings | ✅ | `capabilities.py` | `test_capabilities.py` |
 | Tool / model registry | ✅ | `registry.py`, `examples/tool_manifests/` | `test_registry.py` |
@@ -57,13 +57,13 @@ remains deterministic.
 | Isaac Sim / Isaac Lab integration | ⚪ | manifest JSON only | — |
 | Scenario generation | ⚪ | — | — |
 | Deterministic judges | ⚪ | — | — |
-| Investigation policy | 🟡 unwired · 🔴 ordering bug | `investigation.py` | `test_investigation.py` |
+| Investigation policy | 🟡 wired for current single-result Golden flow | `investigation.py`, `investigation_loop.py`, `agent_session.py` | `test_investigation.py`, `test_investigation_loop.py`, `test_agent_session.py` |
 | Stopping policy | 🟡 unwired | `stopping.py` | `test_stopping.py` |
 | Boundary / scenario search | ⚪ | — | — |
 | Readiness report (deployment verdict) | ⚪ | — | — |
 | Post-deployment learning / calibration | 🟡 ledger only | `trust.py` | `test_trust.py` |
 | Runtime / job infrastructure | ⚪ | — | — |
-| CLI | 🟡 | `context_cli.py`, `schema.py`, `evidence_schema.py`, `golden_path.py` | `test_golden_path.py` |
+| CLI | 🟡 | `context_cli.py`, `schema.py`, `evidence_schema.py`, `golden_path.py`, `agent_session.py` | `test_agent_session.py`, `test_golden_path.py` |
 | API / UI | ⚪ | — | — |
 
 All paths are under `src/drone_sim/` unless stated.
@@ -114,7 +114,7 @@ All paths are under `src/drone_sim/` unless stated.
   timestamp), no mesh geometry extraction, no image EXIF/geo metadata.
   Unknown suffixes fail closed.
 
-### LLM provider edge and call ledger — ✅ (not yet wired into an agent)
+### LLM provider edge and call ledger — ✅
 
 - **What it does:** defines provider-neutral messages, versioned prompts, typed
   tool schemas, normalized responses, task-selected model IDs, environment
@@ -127,14 +127,14 @@ All paths are under `src/drone_sim/` unless stated.
   it was live or replayed. Per-stage budgets stop explicitly; replay cannot
   fall through to a hosted request. It cannot establish a readiness result or
   call arbitrary simulator code.
-- **Where:** `llm.py`, `llm_ledger.py`; the live configuration check is
-  `llm_cli.py`.
-- **Run:** `ANTHROPIC_API_KEY=... uv run drone-llm-smoke`.
+- **Where:** `llm.py`, `llm_ledger.py`; consumed by `agent_session.py` through
+  document extraction, hypothesis generation, and bounded summary contracts.
+- **Run:** replay with `uv run drone-eval agent examples/demo_deployment`, or
+  live with `ANTHROPIC_API_KEY=... uv run drone-eval agent examples/demo_deployment --live`.
 - **Test:** `uv run pytest tests/test_llm.py tests/test_llm_ledger.py` (no
   network call).
-- **Limitations:** retention and customer-data/prompt-injection policy remain
-  BEN-66; no evaluation harness (BEN-67), and no product stage consumes this
-  client yet.
+- **Limitations:** replay is the CI/default demo mode. Live calls require an
+  explicit key; operational retention policy remains deployment-specific.
 
 ### Deployment IR — ✅
 
@@ -189,17 +189,17 @@ All paths are under `src/drone_sim/` unless stated.
   deployment facts (for example, no precipitation means precipitation is ruled
   out). Materiality and testability come from substring heuristics on the ID.
 
-### Hypothesis contract — ✅ · hypothesis generation — ⚪
+### Hypothesis contract and generation — ✅ typed edge
 
 - **What exists:** `FailureHypothesis` and `HypothesisGenerationContract`
   (validation, duplicate keys, `merge_duplicates`). `knowledge.py` defines
   source provenance and fact/prompt precedence.
-- **What does not exist:** anything that *produces* hypotheses. No module
-  turns an IR or coverage map into `FailureHypothesis` objects. A contract-
-  validated Anthropic provider edge now exists but is not wired here.
-  `KnowledgeBundle` is used by nothing except its test. The
-  Golden Path loads `examples/demo_hypotheses.json` (hand-written) instead.
-- **Test:** `uv run pytest tests/test_hypothesis.py tests/test_knowledge.py`
+- **What exists:** `hypothesis_generator.generate_hypotheses` invokes replayed
+  or hosted reasoning and validates the result against the existing contract.
+  The Golden Path exercises it before deterministic planning and execution.
+- **Limitations:** knowledge retrieval is small and the generator does not yet
+  measure taxonomy-wide recall during an operator session.
+- **Test:** `uv run pytest tests/test_hypothesis.py tests/test_hypothesis_generator.py tests/test_agent_session.py`
 
 ### Capability ontology, registry, and payloads — ✅
 
@@ -284,8 +284,9 @@ All paths are under `src/drone_sim/` unless stated.
   optional JSON answers, reviewed replay hypotheses, executed evaluations,
   and an evidence-bounded summary. `investigation_loop.advance` persists the
   deterministic next action and result history.
-- **Missing:** hosted generation/summary writing, clarification answers that
-  change Deployment IR, and full stopping/budget integration.
+- **Missing:** clarification answers that change Deployment IR, multi-step
+  follow-up hypothesis creation, and full stopping/budget integration. Hosted
+  generation and summary writing exist but require explicit opt-in and a key.
 - **Test:** `uv run pytest tests/test_agent_session.py tests/test_investigation.py tests/test_investigation_loop.py`
 
 ### Not implemented — ⚪
@@ -308,8 +309,8 @@ All paths are under `src/drone_sim/` unless stated.
 
 | Command | Does |
 |---|---|
-| `uv run drone-eval analyse <folder> [--hypotheses F]` | Golden Path: every implemented stage, human-readable output, JSON artifacts in `./work/<folder>` |
-| `uv run drone-eval agent <folder> [--answers F] [--replay-hypotheses F]` | Persisted offline/replay operator session; the demo requires no key and supplies its replay fixture automatically |
+| `uv run drone-eval analyse <folder>` | Deterministic context/applicability diagnostic, with JSON artifacts in `./work/<folder>` |
+| `uv run drone-eval agent <folder> [--answers F] [--replay F] [--live]` | Persisted operator session; demo replay needs no key, while `--live` requires explicit hosted configuration |
 | `uv run deployment-context <folder> --state S [--output O]` | Context reconstruction only; prints evidence JSON, or a readiness report and clarifications on stderr with exit 1 |
 | `uv run deployment-ir-schema` / `deployment-evidence-schema` | Print JSON Schemas |
 
@@ -319,8 +320,8 @@ All paths are under `src/drone_sim/` unless stated.
    rule-fidelity providers as exactly quantified, but `routing.py` needs a
    numeric error width. The demo's mass margin (+1.48 kg, computed exactly)
    is therefore reported `unquantified` / `exhausted` / "review required".
-   `tests/test_golden_path.py` pins this current behavior.
-3. **Linear status vs. code.** BEN-12 to BEN-23 are Done in Linear, and each
+   Component tests pin this current behavior.
+2. **Linear status vs. code.** BEN-12 to BEN-23 are Done in Linear, and each
    landed a contract or policy with unit tests. Several
    "Build …" issues (BEN-16 investigation policy, BEN-21 graph execution)
    delivered library functions that no product path called until the

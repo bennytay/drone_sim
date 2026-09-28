@@ -1,10 +1,8 @@
 """Golden Path: run every implemented stage on one deployment folder.
 
 This module composes existing components; it adds no evaluation semantics of
-its own beyond two clearly labelled pieces of demo wiring:
+its own beyond one clearly labelled piece of demo wiring:
 
-- hypotheses are loaded from a hand-authored file because no hypothesis
-  generator exists yet; and
 - decision thresholds are bound from Deployment IR constraints and success
   criteria by a small fixed table because no deterministic judge exists yet.
 
@@ -33,7 +31,8 @@ from drone_sim.investigation import (
     InvestigationState,
     next_action,
 )
-from drone_sim.ir import DeploymentIR
+from drone_sim.ir import Constraint, DeploymentIR
+from drone_sim.llm import LLMError
 from drone_sim.provenance import EvidenceBackedDeployment
 from drone_sim.reconstruction import ClarificationRequest
 from drone_sim.reference_tools import BUILTIN_TOOLS
@@ -50,7 +49,6 @@ from drone_sim.validation import ReadinessReport
 # Stages of the intended product flow that have no implementation yet. They
 # are printed so the demo never implies more than exists.
 NOT_IMPLEMENTED = (
-    ("Hypothesis generation", "no generator turns Deployment IR into hypotheses (BEN-14/15 define only the contract)"),
     ("Deterministic judges", "no versioned judge binds measures to verdicts (BEN-36/37)"),
     ("Scenario Spec", "no simulator-agnostic scenario contract (BEN-24)"),
     ("Isaac Sim / Isaac Lab", "only a manifest in examples/tool_manifests; no adapter (BEN-25/26)"),
@@ -112,7 +110,7 @@ def operating_context(deployment: DeploymentIR) -> OperatingContext:
 
 
 def bind_thresholds(
-    deployment: DeploymentIR, measures: tuple[str, ...]
+    deployment: DeploymentIR, measures: tuple[str, ...], *, usable_energy_wh: float | None = None
 ) -> tuple[BoundThreshold, ...]:
     """Demo wiring: derive decision thresholds from Deployment IR.
 
@@ -127,6 +125,8 @@ def bind_thresholds(
         if constraint.category == "energy"
         and isinstance(constraint.value, int | float)
     }
+    if usable_energy_wh is not None and "Wh" not in energy:
+        energy["Wh"] = ("verified document fact", usable_energy_wh)
     if "remaining_energy_wh" in measures and "Wh" in energy and "1" in energy:
         (usable_id, usable), (reserve_id, fraction) = energy["Wh"], energy["1"]
         bound.append(
@@ -177,6 +177,7 @@ def run_golden_path(
     hypotheses_path: Path | None = None,
     *,
     fresh: bool = False,
+    usable_energy_wh: float | None = None,
 ) -> GoldenPathResult:
     root = root.resolve(strict=True)
     work_dir = work_dir.resolve()
@@ -207,12 +208,31 @@ def run_golden_path(
     assert evidence is not None
     _write(result, "evidence.json", evidence)
     deployment = evidence.deployment
+    evaluation_deployment = deployment
+    if usable_energy_wh is not None and not any(
+        constraint.category == "energy" and constraint.unit == "Wh"
+        for constraint in deployment.constraints
+    ):
+        evaluation_deployment = deployment.model_copy(
+            update={
+                "constraints": (
+                    *deployment.constraints,
+                    Constraint(
+                        id="document-usable-energy",
+                        category="energy",
+                        description="Usable energy from verified document extraction",
+                        value=usable_energy_wh,
+                        unit="Wh",
+                    ),
+                )
+            }
+        )
 
     # Stage 4: failure-mechanism applicability (production code).
     result.coverage = assess_coverage(deployment)
     _write(result, "coverage.json", result.coverage)
 
-    # Stage 5: hypotheses. No generator exists; only a hand-authored file.
+    # Stage 5: validated hypotheses supplied by the agentic edge.
     if hypotheses_path is None:
         return result
     result.hypotheses_path = hypotheses_path
@@ -230,18 +250,18 @@ def run_golden_path(
     # with thresholds bound by the demo wiring above.
     registry, tools = builtin_toolbox()
     router = FidelityRouter(registry, tools)
-    context = operating_context(deployment)
+    context = operating_context(evaluation_deployment)
     runs = []
     for hypothesis in result.hypotheses.hypotheses:
         if hypothesis.status in {HypothesisStatus.REJECTED, HypothesisStatus.MERGED}:
             continue
         goal = EvaluationGoal.for_hypothesis(hypothesis)
-        thresholds = bind_thresholds(deployment, goal.measures)
+        thresholds = bind_thresholds(deployment, goal.measures, usable_energy_wh=usable_energy_wh)
         outcome = router.investigate(
             goal,
             context,
             tuple(item.threshold for item in thresholds),
-            {DataKind.DEPLOYMENT: deployment},
+            {DataKind.DEPLOYMENT: evaluation_deployment},
         )
         runs.append(
             HypothesisRun(
@@ -270,7 +290,6 @@ def _write(result: GoldenPathResult, name: str, value: BaseModel) -> None:
 
 REAL = "✅ implemented"
 WIRING = "🟡 demo wiring"
-FIXTURE = "🟡 hand-authored input"
 MISSING = "⚪ not implemented"
 
 
@@ -337,15 +356,14 @@ def render(result: GoldenPathResult, *, verbose: bool = False) -> str:
         out.append(f"  residual risk: {risk.id} — {risk.reason}")
 
     hypotheses = result.hypotheses
-    stage(5, "Failure hypotheses", f"{MISSING} generator; {FIXTURE}")
+    stage(5, "Failure hypotheses", REAL)
     if hypotheses is None:
-        out.append("  No hypothesis generator exists. Pass --hypotheses FILE to continue")
-        out.append("  with hand-authored hypotheses (see examples/demo_hypotheses.json).")
+        out.append("  No generated hypotheses were supplied by the calling session.")
         out.append("")
         out.append("PIPELINE STOPPED after applicability: no hypotheses to test.")
         out.extend(_footer(result))
         return "\n".join(out)
-    out.append(f"  loaded {len(hypotheses.hypotheses)} hand-authored hypotheses from {result.hypotheses_path}")
+    out.append(f"  validated {len(hypotheses.hypotheses)} generated hypotheses from {result.hypotheses_path}")
     for hypothesis in hypotheses.hypotheses:
         out.append(f"  - {hypothesis.id}  [{hypothesis.materiality.value} materiality]")
         out.append(f"      mechanism: {hypothesis.mechanism_id}")
@@ -509,11 +527,6 @@ def main(argv: list[str] | None = None) -> int:
     )
     analyse.add_argument("root", type=Path, help="Read-only deployment folder")
     analyse.add_argument(
-        "--hypotheses",
-        type=Path,
-        help="Hand-authored hypotheses JSON (no generator exists yet)",
-    )
-    analyse.add_argument(
         "--work-dir",
         type=Path,
         help="Where state and artifacts are written (default: ./work/<folder name>)",
@@ -531,9 +544,10 @@ def main(argv: list[str] | None = None) -> int:
     agent.add_argument("--work-dir", type=Path, help="Where session state and artifacts are written")
     agent.add_argument("--answers", type=Path, help="Optional non-interactive JSON answers file")
     agent.add_argument(
-        "--replay-hypotheses", type=Path,
-        help="Validated offline/replay hypotheses; demo defaults to its bundled replay fixture",
+        "--replay", type=Path,
+        help="Versioned offline/replay LLM responses; demo defaults to its bundled fixture",
     )
+    agent.add_argument("--live", action="store_true", help="Use configured hosted LLM calls instead of replay")
     agent.add_argument("--fresh", action="store_true", help="Discard cached context state")
     args = parser.parse_args(argv)
 
@@ -544,9 +558,9 @@ def main(argv: list[str] | None = None) -> int:
         try:
             state, result = run_agent_session(
                 args.root, work_dir, answers_path=args.answers,
-                replay_hypotheses=args.replay_hypotheses, fresh=args.fresh,
+                replay_path=args.replay, live=args.live, fresh=args.fresh,
             )
-        except (OSError, ValueError) as error:
+        except (LLMError, OSError, ValueError) as error:
             print(f"drone-eval: {error}", file=sys.stderr)
             return 1
         print(render_agent_session(state, result))
@@ -555,7 +569,7 @@ def main(argv: list[str] | None = None) -> int:
     work_dir = args.work_dir or Path("work") / args.root.resolve().name
     try:
         result = run_golden_path(
-            args.root, work_dir, args.hypotheses, fresh=args.fresh
+            args.root, work_dir, fresh=args.fresh
         )
     except (OSError, ValueError) as error:
         print(f"drone-eval: {error}", file=sys.stderr)

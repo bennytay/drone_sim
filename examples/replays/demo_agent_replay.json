@@ -1,0 +1,57 @@
+{
+  "document_proposals": [
+    {
+      "id": "battery-energy-spec",
+      "value": 180,
+      "source_path": "operations/battery_spec.md",
+      "quote": "Usable battery energy: 180 Wh",
+      "line_start": 3,
+      "line_end": 3,
+      "confidence": "medium",
+      "uncertainty_basis": "Quoted battery specification; pack condition is not measured.",
+      "prompt_version": "1"
+    }
+  ],
+  "hypotheses": {
+    "contract_version": "0.1.0",
+    "hypotheses": [
+      {
+        "id": "hyp_energy_reserve",
+        "mechanism_id": "energy_battery.reserve.route_demand",
+        "affected_target": "landing-reserve constraint",
+        "variables": [
+          {"name": "wind_speed_mps", "deployment_path": "/conditions/wind_speed_mps", "role": "cause"},
+          {"name": "takeoff_mass_kg", "deployment_path": "/vehicle/mass_kg", "role": "cause"},
+          {"name": "usable_energy_wh", "deployment_path": null, "role": "document evidence"}
+        ],
+        "causal_path": [
+          "Forecast wind and payload mass raise route power demand.",
+          "Integrated route energy consumes the usable pack energy.",
+          "The landing reserve may fall below the declared fraction."
+        ],
+        "supporting_references": [
+          {"kind": "deployment_evidence", "reference_id": "operations/battery_spec.md#3-3", "summary": "Battery specification states 180 Wh usable energy."},
+          {"kind": "deployment_evidence", "reference_id": "/conditions/wind_speed_mps", "summary": "Forecast steady wind is 6.5 m/s."},
+          {"kind": "taxonomy", "reference_id": "energy_battery.reserve.route_demand", "summary": "Catalog mechanism for route energy demand."}
+        ],
+        "uncertainty": "medium",
+        "uncertainty_reason": "Forecast wind is not a route-local measurement and the pack energy is a nameplate value.",
+        "materiality": "high",
+        "candidate_testabilities": ["analytical", "simulation"],
+        "confirm_if": [{"observable": "reserve_breach", "description": "Landing reserve falls below the declared fraction."}],
+        "falsify_if": [{"observable": "remaining_energy_wh", "description": "Remaining energy exceeds the reserve at landing."}]
+      }
+    ]
+  },
+  "summary": {
+    "label": "NOT A READINESS VERDICT",
+    "deployment_id": "warehouse-roof-inspection-001",
+    "hypotheses_considered": 1,
+    "evaluations_run": 1,
+    "evaluation_outcomes": ["hyp_energy_reserve: remaining_energy_wh threshold satisfied (margin +135; clear)"],
+    "limitations": [
+      "This evidence-bound summary is not a deployment readiness verdict.",
+      "Results are limited to executed providers and nominal conditions."
+    ]
+  }
+}
