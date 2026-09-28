@@ -10,7 +10,6 @@ LAYERS = {
         "test_agent_tools.py",
         "test_applicability_assistant.py",
         "test_document_extraction.py",
-        "test_conflict_assistant.py",
         "test_hypothesis_generator.py",
         "test_knowledge_retrieval.py",
         "test_schema_mapping.py",
@@ -37,6 +36,7 @@ LAYERS = {
         "test_validation.py",
     },
     "integration": {
+        "test_conflict_assistant.py",
         "test_context.py",
         "test_context_agent.py",
         "test_graph.py",
