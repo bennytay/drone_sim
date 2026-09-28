@@ -8,6 +8,11 @@ a read-only local-folder ingestion loop, and first-class evidence for every
 material deployment value. The current implementation uses Deployment IR v0.1
 inside an evidence envelope v0.1.
 
+Failure discovery starts from a versioned, drone-only last-mile taxonomy. Its
+fault-tree leaves carry causal variables, observable outcomes, and required
+Deployment IR context while keeping deployment applicability and deterministic
+pass/fail judgments separate.
+
 ## Development
 
 ```bash
@@ -65,7 +70,9 @@ the evidence contract. See [Completeness validation](docs/validation-v0.1.md)
 for readiness thresholds and conflict handling, and
 [Source adapters](docs/source-adapters-v0.1.md) for bounded parsing contracts.
 The broader search and linking loop is documented in
-[Context reconstruction](docs/context-reconstruction-v0.1.md).
+[Context reconstruction](docs/context-reconstruction-v0.1.md). See
+[Failure taxonomy v0.1](docs/failure-taxonomy-v0.1.md) for the discovery
+surface and its product boundary.
 
 ## Synthetic QA corpus
 

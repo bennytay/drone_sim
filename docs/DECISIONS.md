@@ -181,3 +181,23 @@ visible without making manual data entry the primary UX.
 **Revisit when:** Real deployment corpora justify learned relevance or entity
 matching. Learned ranking may augment these deterministic records, but cannot
 replace traceable source selection, conflict preservation, or stopping rules.
+
+## ADR-013: Versioned mechanism taxonomy separate from applicability
+
+**Decision:** Represent last-mile drone failure knowledge as a versioned,
+hierarchical catalog with stable mechanism IDs. Every testable leaf declares
+causal variables, observable outcomes, and relevant Deployment IR paths. Keep
+the catalog separate from deployment-specific applicability and coverage state,
+and explicitly exclude upstream development defects without a deployment
+trigger.
+
+**Rationale:** A stable catalog gives autonomous discovery a reviewable coverage
+surface without turning every deployment into a generic checklist. Separating
+knowledge from applicability lets evidence rule branches out while preserving
+the distinction between irrelevant and unexamined risks. Keeping thresholds out
+of the taxonomy prevents proposed mechanisms from becoming unsupported pass or
+fail claims.
+
+**Revisit when:** Representative deployment audits expose missing domains or
+show that leaf identity cannot survive normal taxonomy evolution. Extend or
+version the catalog without silently reinterpreting historical audit records.
