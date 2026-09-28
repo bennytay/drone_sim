@@ -8,6 +8,7 @@ from pydantic import Field
 
 from drone_sim.coverage import CoverageMap, Materiality
 from drone_sim.hypothesis import FailureHypothesis, HypothesisStatus
+from drone_sim.hypothesis import HypothesisUncertainty
 from drone_sim.ir import StrictModel
 
 
@@ -55,6 +56,7 @@ _RANK = {
     Materiality.HIGH: 3,
     Materiality.CRITICAL: 4,
 }
+_UNCERTAINTY_RANK = {HypothesisUncertainty.LOW: 1, HypothesisUncertainty.MEDIUM: 2, HypothesisUncertainty.HIGH: 3}
 
 
 def next_action(state: InvestigationState) -> InvestigationAction | None:
@@ -66,7 +68,7 @@ def next_action(state: InvestigationState) -> InvestigationAction | None:
     ]
     if not candidates:
         return None
-    h = max(candidates, key=lambda x: (_RANK[x.materiality], x.uncertainty.value))
+    h = max(candidates, key=lambda x: (_RANK[x.materiality], _UNCERTAINTY_RANK[x.uncertainty]))
     result = by_id.get(h.id)
     if result is None:
         return InvestigationAction(
