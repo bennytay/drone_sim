@@ -13,6 +13,11 @@ fault-tree leaves carry causal variables, observable outcomes, and required
 Deployment IR context while keeping deployment applicability and deterministic
 pass/fail judgments separate.
 
+The taxonomy is evaluated as an evidence-backed coverage map: a mechanism can
+be applicable and unexamined, ruled out by context, or uncertain because
+required evidence is missing. Residual unknown risks remain visible rather
+than being treated as safety proof.
+
 ## Development
 
 ```bash
@@ -72,7 +77,8 @@ for readiness thresholds and conflict handling, and
 The broader search and linking loop is documented in
 [Context reconstruction](docs/context-reconstruction-v0.1.md). See
 [Failure taxonomy v0.1](docs/failure-taxonomy-v0.1.md) for the discovery
-surface and its product boundary.
+surface and its product boundary, and [Failure coverage v0.1](docs/failure-coverage-v0.1.md)
+for applicability and investigation-state semantics.
 
 ## Synthetic QA corpus
 
