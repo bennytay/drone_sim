@@ -6,7 +6,7 @@ Intended behavior lives in [`ARCHITECTURE.md`](ARCHITECTURE.md#intended-architec
 when the two disagree, this file describes reality.
 
 - **Audited at:** `d5554ba` plus the BEN-79 completion-gate change.
-- **Test suite at audit:** 168 passing (`uv run pytest`).
+- **Test suite at audit:** 169 passing (`uv run pytest`).
 - **See it run:** [`DEMO.md`](DEMO.md). **Test layers:** [`TESTING.md`](TESTING.md).
 
 Legend: ✅ implemented and working · 🟡 partial · ⚪ planned / not
@@ -127,6 +127,9 @@ All paths are under `src/drone_sim/` unless stated.
   it was live or replayed. Per-stage budgets stop explicitly; replay cannot
   fall through to a hosted request. It cannot establish a readiness result or
   call arbitrary simulator code.
+- **Golden Path:** all three agent calls are ledgered in
+  `work/<deployment>/llm_ledger.json`; replay entries retain file references
+  and context-trace indices and report zero cost.
 - **Where:** `llm.py`, `llm_ledger.py`; consumed by `agent_session.py` through
   document extraction, hypothesis generation, and bounded summary contracts.
 - **Run:** replay with `uv run drone-eval agent examples/demo_deployment`, or

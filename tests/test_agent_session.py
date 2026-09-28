@@ -3,6 +3,7 @@ from pathlib import Path
 
 from drone_sim.agent_session import run_agent_session
 from drone_sim.golden_path import main
+from drone_sim.llm_ledger import CallLedger, LedgerMode
 
 
 EXAMPLES = Path(__file__).parents[1] / "examples"
@@ -24,6 +25,15 @@ def test_agent_session_runs_demo_offline_and_persists_readable_trace(tmp_path: P
     assert any(event.stage == "evaluation" for event in state.events)
     assert state.investigation is not None
     assert state.investigation.stop_reason == "no_active_hypotheses"
+    entries = CallLedger(tmp_path / "llm_ledger.json").entries()
+    assert [entry.stage for entry in entries] == [
+        "document_extraction",
+        "hypothesis_generation",
+        "session_summary",
+    ]
+    assert all(entry.mode == LedgerMode.REPLAY and entry.cost_usd == 0 for entry in entries)
+    assert all(entry.validation_outcome == "valid" for entry in entries)
+    assert all(entry.input_references and entry.context_trace_indices for entry in entries)
 
 
 def test_answers_file_can_reject_a_hypothesis_before_investigation(tmp_path: Path) -> None:

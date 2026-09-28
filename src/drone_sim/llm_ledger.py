@@ -195,6 +195,7 @@ class LedgeredProvider:
         model_prices: dict[str, ModelPrice] | None = None,
         input_references: tuple[InputReference, ...] = (),
         context_trace_indices: tuple[int, ...] = (),
+        replay_provider: LLMProvider | None = None,
     ):
         self._provider = provider
         self.ledger = ledger
@@ -204,6 +205,7 @@ class LedgeredProvider:
         self.model_prices = model_prices or {}
         self.input_references = input_references
         self.context_trace_indices = context_trace_indices
+        self.replay_provider = replay_provider
         self.last_entry_id: str | None = None
 
     def _stage_entries(self) -> tuple[LedgerEntry, ...]:
@@ -225,20 +227,30 @@ class LedgeredProvider:
         value = request_hash(request, stage=self.stage, input_references=self.input_references, context_trace_indices=self.context_trace_indices)
         existing = self.ledger.get_recording(value)
         if self.mode == LedgerMode.REPLAY:
-            if existing is None:
+            if existing is None and self.replay_provider is None:
                 raise ReplayMissError(f"No recorded LLM response for request hash {value}")
             self._check_budget()
+            response = (
+                existing.response
+                if existing is not None
+                else self.replay_provider.complete(request)  # type: ignore[union-attr]
+            )
             replay_entry = LedgerEntry(
                 id=str(uuid.uuid4()), request_hash=value, prompt_hash=prompt_hash(request),
                 prompt_id=request.prompt.id, prompt_version=request.prompt.version,
-                model=existing.response.model, stage=self.stage, mode=LedgerMode.REPLAY,
+                model=response.model, stage=self.stage, mode=LedgerMode.REPLAY,
                 input_references=self.input_references, context_trace_indices=self.context_trace_indices,
-                response=existing.response, usage=existing.usage, latency_ms=0, cost_usd=0,
+                response=response,
+                usage=TokenUsage(
+                    input_tokens=response.input_tokens,
+                    output_tokens=response.output_tokens,
+                ),
+                latency_ms=0, cost_usd=0,
                 recorded_at=datetime.now(tz=UTC),
             )
             self.ledger.record(replay_entry)
             self.last_entry_id = replay_entry.id
-            return existing.response
+            return response
         self._check_budget()
         if self._provider is None:
             raise LLMError("A live ledgered provider requires a hosted provider")

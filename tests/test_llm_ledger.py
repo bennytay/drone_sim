@@ -79,6 +79,26 @@ def test_replay_miss_fails_closed(tmp_path) -> None:  # type: ignore[no-untyped-
         StructuredOutputRunner(provider).run(task=LLMTask.EXTRACTION, model="model", prompt=prompt(), contract=ConflictResolution)
 
 
+def test_explicit_fixture_provider_records_first_replay_without_live_network(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    fixture = LiveProvider(valid_resolution())
+    ledger = CallLedger(tmp_path / "ledger.json")
+    provider = LedgeredProvider(
+        None, ledger, mode=LedgerMode.REPLAY, stage="extract", replay_provider=fixture
+    )
+
+    StructuredOutputRunner(provider).run(
+        task=LLMTask.EXTRACTION,
+        model="replay",
+        prompt=prompt(),
+        contract=ConflictResolution,
+    )
+
+    entry = ledger.entries()[0]
+    assert entry.mode == LedgerMode.REPLAY
+    assert entry.cost_usd == 0
+    assert entry.validation_outcome == "valid"
+
+
 def test_call_budget_produces_explicit_stop_reason(tmp_path) -> None:  # type: ignore[no-untyped-def]
     provider = LedgeredProvider(LiveProvider(valid_resolution()), CallLedger(tmp_path / "ledger.json"), mode=LedgerMode.LIVE, stage="extract", budget=LLMBudget(max_calls=1))
     runner = StructuredOutputRunner(provider)
