@@ -1,0 +1,190 @@
+{
+  "schema_version": "0.1.0",
+  "deployment_id": "synthetic-01-rooftop-inspection",
+  "vehicle": {
+    "id": "fictional-uav-132",
+    "airframe": "multirotor",
+    "manufacturer": "Synthetic Aeroworks",
+    "model": "Verifier-M6",
+    "mass_kg": 5.76,
+    "max_takeoff_mass_kg": 6.8,
+    "dimensions_m": [
+      0.78,
+      0.69,
+      0.37
+    ],
+    "max_speed_mps": 21.4,
+    "max_wind_speed_mps": 11.8,
+    "model_refs": []
+  },
+  "payloads": [
+    {
+      "id": "payload-01",
+      "kind": "rgb_camera",
+      "mass_kg": 0.4,
+      "dimensions_m": [
+        0.18,
+        0.14,
+        0.16
+      ],
+      "model_refs": []
+    }
+  ],
+  "mission": {
+    "name": "Rooftop Inspection",
+    "objective": "Inspect rooftop HVAC equipment",
+    "route": {
+      "points": [
+        {
+          "id": "wp-01",
+          "position": {
+            "latitude_deg": -33.8688,
+            "longitude_deg": 151.2093,
+            "altitude_m": 12.4,
+            "altitude_reference": "above_ground"
+          },
+          "acceptance_radius_m": 2.0,
+          "target_speed_mps": 6.0,
+          "action": "takeoff"
+        },
+        {
+          "id": "wp-02",
+          "position": {
+            "latitude_deg": -33.86868,
+            "longitude_deg": 151.20944,
+            "altitude_m": 15.1,
+            "altitude_reference": "above_ground"
+          },
+          "acceptance_radius_m": 2.0,
+          "target_speed_mps": 6.8,
+          "action": "capture_imagery"
+        },
+        {
+          "id": "wp-03",
+          "position": {
+            "latitude_deg": -33.86856,
+            "longitude_deg": 151.20958,
+            "altitude_m": 20.6,
+            "altitude_reference": "above_ground"
+          },
+          "acceptance_radius_m": 2.0,
+          "target_speed_mps": 6.9,
+          "action": "capture_imagery"
+        },
+        {
+          "id": "wp-04",
+          "position": {
+            "latitude_deg": -33.86844,
+            "longitude_deg": 151.20972,
+            "altitude_m": 24.8,
+            "altitude_reference": "above_ground"
+          },
+          "acceptance_radius_m": 2.0,
+          "target_speed_mps": 3.8,
+          "action": "capture_imagery"
+        },
+        {
+          "id": "wp-05",
+          "position": {
+            "latitude_deg": -33.86832,
+            "longitude_deg": 151.20986,
+            "altitude_m": 28.4,
+            "altitude_reference": "above_ground"
+          },
+          "acceptance_radius_m": 2.0,
+          "target_speed_mps": 5.0,
+          "action": "capture_imagery"
+        }
+      ],
+      "source": {
+        "id": "route-01",
+        "uri": "route/flight.geojson",
+        "role": "route",
+        "media_type": "application/geo+json"
+      }
+    },
+    "planned_start": "2026-10-05T21:00:00Z",
+    "planned_duration_s": 1285
+  },
+  "site": {
+    "name": "Sydney warehouse",
+    "reference_point": {
+      "latitude_deg": -33.8688,
+      "longitude_deg": 151.2093,
+      "altitude_m": 111.0,
+      "altitude_reference": "mean_sea_level"
+    },
+    "artifacts": [
+      {
+        "id": "site-model-01",
+        "uri": "site/site.obj",
+        "role": "site_model",
+        "media_type": "text/plain"
+      }
+    ]
+  },
+  "conditions": {
+    "observed_at": "2026-10-05T20:30:00Z",
+    "temperature_c": 20.7,
+    "wind_speed_mps": 3.7,
+    "wind_direction_deg": 322,
+    "precipitation_mm_h": 0,
+    "visibility_m": 15000,
+    "artifacts": []
+  },
+  "autonomy": {
+    "mode": "supervised_autonomous",
+    "controller": "ArduPilot",
+    "version": "2.2.9",
+    "config": null
+  },
+  "constraints": [
+    {
+      "id": "steady-wind-limit",
+      "category": "weather",
+      "description": "Do not launch above the approved steady wind limit",
+      "value": 11.8,
+      "unit": "m/s"
+    },
+    {
+      "id": "minimum-reserve",
+      "category": "energy",
+      "description": "Minimum battery reserve at landing",
+      "value": 25,
+      "unit": "%"
+    }
+  ],
+  "success_criteria": [
+    {
+      "id": "route-completion",
+      "metric": "route_completion_ratio",
+      "operator": "gte",
+      "target": 0.98,
+      "unit": "ratio"
+    },
+    {
+      "id": "clearance",
+      "metric": "obstacle_clearance_m",
+      "operator": "gte",
+      "target": 3.0,
+      "unit": "m"
+    }
+  ],
+  "telemetry": [
+    {
+      "id": "reference-flight-01",
+      "uri": "telemetry/reference.csv",
+      "role": "telemetry",
+      "media_type": "text/csv"
+    }
+  ],
+  "raw_data": [
+    {
+      "id": "site-image-01",
+      "uri": "media/site.png",
+      "role": "other",
+      "media_type": "image/png"
+    }
+  ],
+  "models": []
+}

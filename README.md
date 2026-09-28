@@ -73,3 +73,24 @@ The broader search and linking loop is documented in
 [Context reconstruction](docs/context-reconstruction-v0.1.md). See
 [Failure taxonomy v0.1](docs/failure-taxonomy-v0.1.md) for the discovery
 surface and its product boundary.
+
+## Synthetic QA corpus
+
+Six reproducible fictional deployment folders live under
+`examples/synthetic_deployments`. They cover clean, renamed/messy,
+conflicting, incomplete, split-file, and invalid-unit outcomes and include
+representative GeoJSON, KML, CSV telemetry, ULog/MCAP headers, DOCX, PNG, and
+OBJ artifacts. They are test data only and must never authorize a real flight.
+
+Regenerate them deterministically with:
+
+```bash
+uv run python tools/generate_fake_deployments.py \
+  --output examples/synthetic_deployments \
+  --seed 20260928 \
+  --count 6 \
+  --force
+```
+
+The corpus manifest declares the expected readiness of each folder, and the
+test suite runs every folder through the real context orchestrator.

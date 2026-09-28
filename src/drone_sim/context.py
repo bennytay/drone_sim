@@ -425,7 +425,7 @@ class ContextOrchestrator:
                     parsed = self.reader.parse(record.path)
                     state.parsed_sources[record.path] = parsed
                     state.inspected_paths.add(record.path)
-                extracted = self._extract(field, record.path, parsed.content)
+                extracted = self._extract(field, record.path, parsed)
                 outcome = "candidate_extracted" if extracted is not None else "no_candidate"
                 state.trace.append(
                     InspectionEvent(
@@ -509,15 +509,20 @@ class ContextOrchestrator:
 
     @staticmethod
     def _extract(
-        field: str, source_path: str, content: Any
+        field: str, source_path: str, parsed: ParsedSource
     ) -> tuple[Any, str, dict[str, str]] | None:
+        content = parsed.content
         if not isinstance(content, dict):
             return None
         found = extract_dependency(DEPENDENCY_BY_FIELD[field], content)
         if found:
             return found
         stem = Path(source_path).stem
-        if _tokens(stem) == _tokens(field):
+        if (
+            parsed.adapter == "json"
+            and parsed.artifact_kind == "structured_data"
+            and _tokens(stem) == _tokens(field)
+        ):
             return content, "", {}
         return None
 

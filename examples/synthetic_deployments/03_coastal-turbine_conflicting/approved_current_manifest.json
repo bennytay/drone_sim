@@ -1,0 +1,190 @@
+{
+  "schema_version": "0.1.0",
+  "deployment_id": "synthetic-03-coastal-turbine",
+  "vehicle": {
+    "id": "fictional-uav-781",
+    "airframe": "multirotor",
+    "manufacturer": "Synthetic Aeroworks",
+    "model": "Verifier-M4",
+    "mass_kg": 5.74,
+    "max_takeoff_mass_kg": 7.08,
+    "dimensions_m": [
+      0.77,
+      0.68,
+      0.4
+    ],
+    "max_speed_mps": 21.8,
+    "max_wind_speed_mps": 10.4,
+    "model_refs": []
+  },
+  "payloads": [
+    {
+      "id": "payload-03",
+      "kind": "rgb_camera",
+      "mass_kg": 0.4,
+      "dimensions_m": [
+        0.18,
+        0.14,
+        0.16
+      ],
+      "model_refs": []
+    }
+  ],
+  "mission": {
+    "name": "Coastal Turbine",
+    "objective": "Inspect turbine blades and nacelle",
+    "route": {
+      "points": [
+        {
+          "id": "wp-01",
+          "position": {
+            "latitude_deg": -34.4278,
+            "longitude_deg": 150.8931,
+            "altitude_m": 12.0,
+            "altitude_reference": "above_ground"
+          },
+          "acceptance_radius_m": 2.0,
+          "target_speed_mps": 4.2,
+          "action": "takeoff"
+        },
+        {
+          "id": "wp-02",
+          "position": {
+            "latitude_deg": -34.42768,
+            "longitude_deg": 150.89324,
+            "altitude_m": 15.6,
+            "altitude_reference": "above_ground"
+          },
+          "acceptance_radius_m": 2.0,
+          "target_speed_mps": 6.2,
+          "action": "capture_imagery"
+        },
+        {
+          "id": "wp-03",
+          "position": {
+            "latitude_deg": -34.42756,
+            "longitude_deg": 150.89338,
+            "altitude_m": 19.8,
+            "altitude_reference": "above_ground"
+          },
+          "acceptance_radius_m": 2.0,
+          "target_speed_mps": 4.8,
+          "action": "capture_imagery"
+        },
+        {
+          "id": "wp-04",
+          "position": {
+            "latitude_deg": -34.42744,
+            "longitude_deg": 150.89352,
+            "altitude_m": 24.9,
+            "altitude_reference": "above_ground"
+          },
+          "acceptance_radius_m": 2.0,
+          "target_speed_mps": 4.5,
+          "action": "capture_imagery"
+        },
+        {
+          "id": "wp-05",
+          "position": {
+            "latitude_deg": -34.42732,
+            "longitude_deg": 150.89366,
+            "altitude_m": 27.8,
+            "altitude_reference": "above_ground"
+          },
+          "acceptance_radius_m": 2.0,
+          "target_speed_mps": 3.6,
+          "action": "capture_imagery"
+        }
+      ],
+      "source": {
+        "id": "route-03",
+        "uri": "route/flight.geojson",
+        "role": "route",
+        "media_type": "application/geo+json"
+      }
+    },
+    "planned_start": "2026-10-07T21:00:00Z",
+    "planned_duration_s": 1242
+  },
+  "site": {
+    "name": "Wollongong wind farm",
+    "reference_point": {
+      "latitude_deg": -34.4278,
+      "longitude_deg": 150.8931,
+      "altitude_m": 31.9,
+      "altitude_reference": "mean_sea_level"
+    },
+    "artifacts": [
+      {
+        "id": "site-model-03",
+        "uri": "site/site.obj",
+        "role": "site_model",
+        "media_type": "text/plain"
+      }
+    ]
+  },
+  "conditions": {
+    "observed_at": "2026-10-07T20:30:00Z",
+    "temperature_c": 15.4,
+    "wind_speed_mps": 8.5,
+    "wind_direction_deg": 218,
+    "precipitation_mm_h": 0,
+    "visibility_m": 10000,
+    "artifacts": []
+  },
+  "autonomy": {
+    "mode": "supervised_autonomous",
+    "controller": "PX4",
+    "version": "2.1.0",
+    "config": null
+  },
+  "constraints": [
+    {
+      "id": "steady-wind-limit",
+      "category": "weather",
+      "description": "Do not launch above the approved steady wind limit",
+      "value": 10.4,
+      "unit": "m/s"
+    },
+    {
+      "id": "minimum-reserve",
+      "category": "energy",
+      "description": "Minimum battery reserve at landing",
+      "value": 25,
+      "unit": "%"
+    }
+  ],
+  "success_criteria": [
+    {
+      "id": "route-completion",
+      "metric": "route_completion_ratio",
+      "operator": "gte",
+      "target": 0.98,
+      "unit": "ratio"
+    },
+    {
+      "id": "clearance",
+      "metric": "obstacle_clearance_m",
+      "operator": "gte",
+      "target": 3.0,
+      "unit": "m"
+    }
+  ],
+  "telemetry": [
+    {
+      "id": "reference-flight-03",
+      "uri": "telemetry/reference.csv",
+      "role": "telemetry",
+      "media_type": "text/csv"
+    }
+  ],
+  "raw_data": [
+    {
+      "id": "site-image-03",
+      "uri": "media/site.png",
+      "role": "other",
+      "media_type": "image/png"
+    }
+  ],
+  "models": []
+}

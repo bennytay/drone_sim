@@ -1,0 +1,18 @@
+{
+  "acceptance_criteria": [
+    {
+      "criterion_id": "route-completion",
+      "measure": "route_completion_ratio",
+      "operator": "gte",
+      "threshold": 0.98,
+      "unit": "ratio"
+    },
+    {
+      "criterion_id": "clearance",
+      "measure": "obstacle_clearance_m",
+      "operator": "gte",
+      "threshold": 3.0,
+      "unit": "m"
+    }
+  ]
+}

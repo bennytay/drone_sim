@@ -1,0 +1,42 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "synthetic-05-bridge-inspection",
+      "properties": {
+        "altitude_reference": "above_ground"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            150.68,
+            -33.552,
+            12.6
+          ],
+          [
+            150.68014,
+            -33.55188,
+            15.4
+          ],
+          [
+            150.68028,
+            -33.55176,
+            20.9
+          ],
+          [
+            150.68042,
+            -33.55164,
+            23.3
+          ],
+          [
+            150.68056,
+            -33.55152,
+            27.6
+          ]
+        ]
+      }
+    }
+  ]
+}
