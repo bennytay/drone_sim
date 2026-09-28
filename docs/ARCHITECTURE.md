@@ -307,8 +307,11 @@ Context readiness gate (drone_hypothesis_generation_v1)  ✅  validation.py
 Failure taxonomy + applicability map                     🟡  failure_taxonomy.py ✅, coverage.py 🟡 (context-exists rules only)
   │
   ▼
-Failure hypothesis session                               🟡  agent_session.py + replay proposal fixture
-  │  optional review via answers file; hosted generation remains an edge
+Document extraction (typed replay/live LLM edge)         🟡  document_extraction.py + exact quote validation
+  │
+  ▼
+Failure hypothesis session                               ✅  hypothesis_generator.py + typed replay/live response
+  │  optional review via answers file
   ▼
 Investigation policy + persisted trace                   🟡  investigation.py, investigation_loop.py, agent_session.py
   │
@@ -342,9 +345,10 @@ Post-deployment learning                                 🟡  trust.py ledger A
 - **Real, end to end:** folder to evidence-backed IR, readiness gate,
   applicability map, capability planning, in-process execution, and fidelity
   routing, for the energy-reserve and takeoff-mass mechanisms.
-- **Stand-ins, clearly labelled in output:** replay hypotheses and decision
-  thresholds (`golden_path.bind_thresholds`). Both live only in
-  the demo layer; no core module depends on them.
+- **Stand-in, clearly labelled in output:** decision thresholds
+  (`golden_path.bind_thresholds`) until deterministic judges exist. Recorded
+  responses are test fixtures for the real typed LLM boundary, not alternate
+  hypothesis semantics.
 - **Stops with explicit gaps:** static-obstacle clearance. The planner reports
   that no provider can produce `site_geometry`.
 - **Absent:** Scenario Spec, Isaac, judges, variation and boundary search,

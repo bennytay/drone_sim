@@ -19,7 +19,7 @@ uv run drone-llm-eval benchmarks/llm_baseline.json # replay scorecard
 uv run pytest tests/test_document_extraction.py # anchored document proposals
 ```
 
-At the time of writing: 131 tests, all passing, in under a second. CI
+At the time of writing: 168 tests, all passing, in under a second. CI
 (`.github/workflows/test.yml`, job `test`) runs `uv run pytest -q` on Python
 3.13 for every pull request and every push to `main`.
 
@@ -62,25 +62,27 @@ Several components wired together.
 
 ## Layer 3 — Golden Path product test (`-m golden`)
 
-`test_golden_path.py` runs `drone-eval analyse examples/demo_deployment
---hypotheses examples/demo_hypotheses.json` in-process and asserts:
+`test_golden_path.py` runs `drone-eval agent examples/demo_deployment` in
+offline replay mode and asserts:
 
 - the demo folder reconstructs to a `READY` evidence-backed IR, with the exact
   source anchor for vehicle mass, and is left unmodified;
-- every hypothesised mechanism is `applies` in the coverage map;
+- document extraction traverses the typed LLM boundary and its exact quote and
+  line anchor are verified;
+- hypothesis generation traverses the typed LLM boundary, validates the
+  contract, and produces an applicable mechanism;
 - the energy-reserve hypothesis is planned, executed, and accepted at
   analytical fidelity, with the reserve threshold derived as 36 Wh;
-- the mass-margin result is currently `unquantified` (known defect 2 in
-  `CURRENT_STATE.md`; update the test when it is fixed);
-- the clearance hypothesis stops on a `site_geometry` planning gap;
-- rendered output labels the stand-ins and unimplemented stages;
+- the investigation loop records its action/result trace and stops after the
+  energy hypothesis resolves;
+- rendered output labels threshold binding and unimplemented stages;
 - CLI exit codes: `0` for the demo, `2` for a conflicting folder, and `1` for a
   work directory inside the analysed folder.
 
 ## What is not tested
 
 These have no executable tests because they do not exist yet. Do not describe
-them as tested: hypothesis generation, Scenario Spec, Isaac Sim/Lab, judges,
+them as tested: Scenario Spec, Isaac Sim/Lab, judges,
 scenario variation and boundary search, the readiness report, job runtime,
 API, and UI. The Isaac manifest is validated only as registry metadata. The
 closed-loop and high-fidelity paths in `test_graph.py` and `test_routing.py`
@@ -94,13 +96,14 @@ least-privilege API key and run:
 
 ```bash
 ANTHROPIC_API_KEY=... uv run drone-llm-smoke
+ANTHROPIC_API_KEY=... uv run drone-eval agent examples/demo_deployment --live --fresh
 ```
 
 Optional settings are `DRONE_SIM_LLM_EXTRACTION_MODEL`,
 `DRONE_SIM_LLM_HYPOTHESIS_MODEL`, `DRONE_SIM_LLM_TIMEOUT_S`, and
 `DRONE_SIM_LLM_RETRIES`. With no key, the command fails before a network call
-with a clear configuration message; the existing deterministic pipeline does
-not invoke this command or an LLM.
+with a clear configuration message. Golden tests use recorded replay responses
+and never read or transmit an API key.
 
 ## Adding tests
 

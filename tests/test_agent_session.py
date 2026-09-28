@@ -16,21 +16,25 @@ def test_agent_session_runs_demo_offline_and_persists_readable_trace(tmp_path: P
     assert state.completed
     assert state.summary is not None
     assert state.summary.label == "NOT A READINESS VERDICT"
-    assert state.summary.evaluations_run == 3
+    assert state.summary.evaluations_run == 1
     assert (tmp_path / "agent_session.json").exists()
+    assert (tmp_path / "generated_hypotheses.json").exists()
     assert any(event.stage == "facts" for event in state.events)
+    assert any(event.stage == "document" and event.anchor == "operations/battery_spec.md#3-3" for event in state.events)
     assert any(event.stage == "evaluation" for event in state.events)
+    assert state.investigation is not None
+    assert state.investigation.stop_reason == "no_active_hypotheses"
 
 
 def test_answers_file_can_reject_a_hypothesis_before_investigation(tmp_path: Path) -> None:
     answers = tmp_path / "answers.json"
-    answers.write_text(json.dumps({"hypotheses": {"hyp_roof_clearance": "reject"}}))
+    answers.write_text(json.dumps({"hypotheses": {"hyp_energy_reserve": "reject"}}))
 
     state, result = run_agent_session(DEMO, tmp_path / "session", answers_path=answers)
 
     assert state.summary is not None
-    assert state.summary.hypotheses_considered == 2
-    assert {run.hypothesis_id for run in result.runs} == {"hyp_energy_reserve", "hyp_takeoff_mass"}
+    assert state.summary.hypotheses_considered == 0
+    assert not result.runs
 
 
 def test_agent_cli_uses_demo_replay_without_an_api_key(tmp_path: Path, capsys) -> None:
@@ -40,3 +44,12 @@ def test_agent_cli_uses_demo_replay_without_an_api_key(tmp_path: Path, capsys) -
     assert code == 0
     assert "NOT A READINESS VERDICT" in output
     assert "[evaluation]" in output
+
+
+def test_live_mode_fails_before_network_without_explicit_key(tmp_path: Path, capsys, monkeypatch) -> None:
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+
+    code = main(["agent", str(DEMO), "--live", "--work-dir", str(tmp_path)])
+
+    assert code == 1
+    assert "set ANTHROPIC_API_KEY" in capsys.readouterr().err

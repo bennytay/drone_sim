@@ -371,12 +371,14 @@ versions.
 
 ## ADR-023: One Golden Path with labelled stand-ins, separate from the core
 
-**Decision:** Keep one canonical demo, `drone-eval analyse` in
-`drone_sim/golden_path.py`, that composes the existing production components
-on `examples/demo_deployment/`. Where a stage has no implementation, the demo
-may use only an explicitly labelled stand-in: hand-authored hypotheses in
-`examples/demo_hypotheses.json`, or thresholds from
-`golden_path.bind_thresholds`. No core module may import `golden_path`.
+**Decision:** Keep one canonical demo, `drone-eval agent` in
+`drone_sim/agent_session.py`, that composes the existing production components
+on `examples/demo_deployment/`. LLM-dependent stages use the same typed
+contracts in live and recorded-replay modes. The hypothesis stand-in was
+removed in BEN-79; generated proposals now traverse `generate_hypotheses`.
+Thresholds from `golden_path.bind_thresholds` remain an explicitly labelled
+stand-in until deterministic judges exist. No core semantic module imports the
+operator-session layer.
 Unimplemented stages are printed as not implemented instead of being simulated.
 Tests are organized into component, integration, and golden layers, enforced
 by `tests/conftest.py`.
@@ -387,8 +389,8 @@ end to end, and architecture prose described planned stages as current. A
 single honest path makes progress measurable: each milestone should make one
 more stage real or remove a stand-in.
 
-**Revisit when:** Hypothesis generation and judges exist (the stand-ins
-should then be deleted), or a real product entry point (API/UI, BEN-58–62)
+**Revisit when:** Judges exist (the remaining threshold stand-in should then
+be deleted), or a real product entry point (API/UI, BEN-58–62)
 supersedes the CLI as the primary demo surface.
 
 ## ADR-024: Provider-neutral, contract-validated hosted LLM edge

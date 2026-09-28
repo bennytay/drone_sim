@@ -15,13 +15,6 @@
       "unit": "m"
     },
     {
-      "id": "usable-energy",
-      "category": "energy",
-      "description": "Usable pack energy at release",
-      "value": 180,
-      "unit": "Wh"
-    },
-    {
       "id": "landing-reserve",
       "category": "energy",
       "description": "Minimum landing reserve fraction of usable energy",
