@@ -35,6 +35,9 @@ def test_agent_session_runs_demo_offline_and_persists_readable_trace(tmp_path: P
     assert all(entry.mode == LedgerMode.REPLAY and entry.cost_usd == 0 for entry in entries)
     assert all(entry.validation_outcome == "valid" for entry in entries)
     assert all(entry.input_references and entry.context_trace_indices for entry in entries)
+    assert (tmp_path / "tool_ledger.json").exists()
+    assert len(json.loads((tmp_path / "tool_ledger.json").read_text())) == 4
+    assert any(event.field == "agent_tool" for event in result.state.trace)
 
 
 def test_answers_file_can_reject_a_hypothesis_before_investigation(tmp_path: Path) -> None:

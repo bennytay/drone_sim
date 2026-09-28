@@ -94,6 +94,7 @@ Files written to `work/demo_deployment/` (git-ignored):
 | `generated_hypotheses.json` | Contract-validated generator output after optional accept/reject review |
 | `agent_session.json` | Persistent operator trace, questions, and evidence-bounded summary |
 | `llm_ledger.json` | Every replay/live LLM call, input references, context trace links, validation outcome, token usage, latency, and cost |
+| `tool_ledger.json` | Every bounded deterministic agent-tool call with arguments, timestamp, and result digest |
 | `routing/<hypothesis>.json` | Plan, node records with digests, measures with lineage, boundary assessments, and justifications |
 
 ## 5. What each stage means
