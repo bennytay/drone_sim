@@ -21,7 +21,7 @@ ANTHROPIC_API_KEY=... uv run drone-llm-eval benchmarks/llm_baseline.json --live 
 uv run pytest tests/test_document_extraction.py # anchored document proposals
 ```
 
-At the time of writing: 174 tests, all passing, in under a second. CI
+At the time of writing: 177 tests, all passing, in under a second. CI
 (`.github/workflows/test.yml`, job `test`) runs `uv run pytest -q` on Python
 3.13 for every pull request and every push to `main`.
 
