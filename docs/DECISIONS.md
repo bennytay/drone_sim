@@ -368,3 +368,25 @@ make extrapolation visible in the readiness report.
 trust or to justify controlled inheritance between closely related model
 versions.
 
+
+## ADR-023: One Golden Path with labelled stand-ins, separate from the core
+
+**Decision:** Keep one canonical demo, `drone-eval analyse` in
+`drone_sim/golden_path.py`, that composes the existing production components
+on `examples/demo_deployment/`. Where a stage has no implementation, the demo
+may use only an explicitly labelled stand-in: hand-authored hypotheses in
+`examples/demo_hypotheses.json`, or thresholds from
+`golden_path.bind_thresholds`. No core module may import `golden_path`.
+Unimplemented stages are printed as not implemented instead of being simulated.
+Tests are organized into component, integration, and golden layers, enforced
+by `tests/conftest.py`.
+
+**Rationale:** Agents were landing contracts and libraries faster than they
+were being connected. Without one runnable path, it was unclear what worked
+end to end, and architecture prose described planned stages as current. A
+single honest path makes progress measurable: each milestone should make one
+more stage real or remove a stand-in.
+
+**Revisit when:** Hypothesis generation and judges exist (the stand-ins
+should then be deleted), or a real product entry point (API/UI, BEN-58–62)
+supersedes the CLI as the primary demo surface.

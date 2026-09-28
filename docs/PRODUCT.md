@@ -5,6 +5,35 @@ Verification. Repository instructions live in `AGENTS.md`; implementation
 structure lives in `ARCHITECTURE.md`; architectural rationale lives in
 `DECISIONS.md`.
 
+## Two-minute explanation
+
+We are building automated pre-deployment verification for drones.
+
+The assumption is that the drone already works. The problem is deciding
+whether that known-working drone will successfully carry out a specific
+real-world deployment: this site, this route, this payload, this weather, these
+rules.
+
+The operator provides deployment information they already have: aircraft
+configuration, route, site geometry, operational documents, historical logs,
+and environmental context. The system reconstructs the deployment into one
+canonical description, tracing every value back to its source. It then
+identifies plausible failure mechanisms, such as energy reserve, obstacle
+clearance, wind limits, navigation degradation, or visibility. For each one,
+it chooses the cheapest model or simulation that can credibly test it,
+escalating to high-fidelity simulation (Isaac Sim / Isaac Lab) only when the
+answer is close or uncertain. It explores realistic variations such as wind,
+battery condition, payload, geometry, navigation degradation, and visibility,
+and returns the conditions under which the deployment becomes problematic,
+with the evidence behind each claim.
+
+The operator should not need to know which simulator test to configure
+manually.
+
+*What exists today* is narrower: reconstruction, applicability, planning, and
+analytical evaluation for a hand-supplied hypothesis. See
+[`CURRENT_STATE.md`](CURRENT_STATE.md) and run it with [`DEMO.md`](DEMO.md).
+
 ## Problem
 
 A drone that works in development can still fail at a particular deployment.

@@ -1,0 +1,37 @@
+{
+  "operating_limits": [
+    {
+      "id": "wind-limit",
+      "category": "weather",
+      "description": "Do not operate above the approved steady wind speed",
+      "value": 10,
+      "unit": "m/s"
+    },
+    {
+      "id": "max-altitude",
+      "category": "airspace",
+      "description": "Maximum height above ground under the site approval",
+      "value": 120,
+      "unit": "m"
+    },
+    {
+      "id": "usable-energy",
+      "category": "energy",
+      "description": "Usable pack energy at release",
+      "value": 180,
+      "unit": "Wh"
+    },
+    {
+      "id": "landing-reserve",
+      "category": "energy",
+      "description": "Minimum landing reserve fraction of usable energy",
+      "value": 0.2,
+      "unit": "1"
+    },
+    {
+      "id": "daylight-only",
+      "category": "operations",
+      "description": "Daylight operations only"
+    }
+  ]
+}

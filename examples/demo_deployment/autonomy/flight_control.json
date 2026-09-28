@@ -1,0 +1,13 @@
+{
+  "flight_control": {
+    "control_mode": "supervised_autonomous",
+    "flight_controller": "waypoint_follower",
+    "controller_version": "1.4.0",
+    "config": {
+      "id": "controller-config",
+      "uri": "config/controller.json",
+      "role": "controller_config",
+      "media_type": "application/json"
+    }
+  }
+}

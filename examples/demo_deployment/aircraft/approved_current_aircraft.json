@@ -1,0 +1,17 @@
+{
+  "aircraft": {
+    "aircraft_id": "inspection-uav-01",
+    "type": "multirotor",
+    "manufacturer": "Example Aerospace",
+    "model": "Surveyor X",
+    "takeoff_mass_kg": 4.2,
+    "max_takeoff_mass_kg": 6.0,
+    "size_m": [
+      0.85,
+      0.85,
+      0.42
+    ],
+    "max_speed_mps": 15.0,
+    "max_wind_speed_mps": 10.0
+  }
+}

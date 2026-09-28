@@ -1,0 +1,90 @@
+{
+  "flight_plan": {
+    "title": "North roof inspection",
+    "purpose": "Capture complete imagery of the north warehouse roof",
+    "route": {
+      "points": [
+        {
+          "id": "takeoff",
+          "position": {
+            "latitude_deg": -33.8688,
+            "longitude_deg": 151.2093,
+            "altitude_m": 0.0,
+            "altitude_reference": "above_ground"
+          },
+          "acceptance_radius_m": 1.5,
+          "target_speed_mps": 2.0,
+          "action": "takeoff"
+        },
+        {
+          "id": "climb",
+          "position": {
+            "latitude_deg": -33.8688,
+            "longitude_deg": 151.2093,
+            "altitude_m": 24.0,
+            "altitude_reference": "above_ground"
+          },
+          "acceptance_radius_m": 1.5,
+          "target_speed_mps": 2.0,
+          "action": "climb"
+        },
+        {
+          "id": "roof-west",
+          "position": {
+            "latitude_deg": -33.8685,
+            "longitude_deg": 151.20905,
+            "altitude_m": 24.0,
+            "altitude_reference": "above_ground"
+          },
+          "acceptance_radius_m": 1.5,
+          "target_speed_mps": 5.0,
+          "action": "capture_imagery"
+        },
+        {
+          "id": "roof-east",
+          "position": {
+            "latitude_deg": -33.8685,
+            "longitude_deg": 151.20965,
+            "altitude_m": 24.0,
+            "altitude_reference": "above_ground"
+          },
+          "acceptance_radius_m": 1.5,
+          "target_speed_mps": 5.0,
+          "action": "capture_imagery"
+        },
+        {
+          "id": "return",
+          "position": {
+            "latitude_deg": -33.8688,
+            "longitude_deg": 151.2093,
+            "altitude_m": 24.0,
+            "altitude_reference": "above_ground"
+          },
+          "acceptance_radius_m": 1.5,
+          "target_speed_mps": 5.0,
+          "action": "transit"
+        },
+        {
+          "id": "land",
+          "position": {
+            "latitude_deg": -33.8688,
+            "longitude_deg": 151.2093,
+            "altitude_m": 0.0,
+            "altitude_reference": "above_ground"
+          },
+          "acceptance_radius_m": 1.5,
+          "target_speed_mps": 1.5,
+          "action": "land"
+        }
+      ],
+      "source": {
+        "id": "planned-route",
+        "uri": "route/inspection.geojson",
+        "role": "route",
+        "media_type": "application/geo+json"
+      }
+    },
+    "planned_start": "2026-10-01T23:00:00Z",
+    "planned_duration_s": 900
+  }
+}

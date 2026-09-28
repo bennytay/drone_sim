@@ -1,0 +1,9 @@
+{
+  "controller": "waypoint_follower",
+  "version": "1.4.0",
+  "parameters": {
+    "cruise_speed_mps": 5.0,
+    "max_tilt_deg": 30,
+    "rtl_altitude_m": 30
+  }
+}

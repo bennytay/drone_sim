@@ -9,10 +9,15 @@ Use these sources in order:
 
 1. `AGENTS.md` — mandatory persistent instructions.
 2. [`docs/PRODUCT.md`](docs/PRODUCT.md) — canonical product truth.
-3. [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — canonical current system model.
-4. [`docs/DECISIONS.md`](docs/DECISIONS.md) — rationale for major choices.
-5. Linear or GitHub — current task-specific context.
-6. Code — implementation truth.
+3. [`docs/CURRENT_STATE.md`](docs/CURRENT_STATE.md) — what is actually
+   implemented, partial, planned, or broken today.
+4. [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — intended architecture and,
+   separately, the current implementation.
+5. [`docs/DECISIONS.md`](docs/DECISIONS.md) — rationale for major choices.
+6. [`docs/DEMO.md`](docs/DEMO.md) and [`docs/TESTING.md`](docs/TESTING.md) —
+   how to run the Golden Path and each test layer.
+7. Linear or GitHub — current task-specific context.
+8. Code — implementation truth.
 
 ## Product boundary
 
@@ -58,12 +63,66 @@ evidence-backed readiness report.
 
 1. Read `AGENTS.md` fully.
 2. Read `docs/PRODUCT.md`.
-3. Read `docs/ARCHITECTURE.md`.
+3. Read `docs/CURRENT_STATE.md` and `docs/ARCHITECTURE.md`. Make sure local
+   `main` matches `origin/main` first (`git pull`).
 4. Read the relevant Linear or GitHub issue before implementing.
 5. Inspect the repository before proposing architecture changes.
 6. Preserve drone-only scope.
 7. Flag conflicts with documented architecture or decisions before proceeding.
 8. Update `docs/DECISIONS.md` when a meaningful architectural decision changes.
+
+## Definition of Done for agent work
+
+No Linear or GitHub implementation issue is complete until the agent reports
+all of the following. Put the report in the PR description and the final
+message to the user, and link it from the Linear comment. A contract or
+library function with unit tests is not a working pipeline stage; say which
+one was delivered.
+
+### What changed
+A concise explanation.
+
+### Why it exists
+How it supports the drone deployment-verification product.
+
+### Where it fits
+Which part of the architecture it belongs to (name the stage in
+`docs/ARCHITECTURE.md` → Current implementation).
+
+### How to run it
+Exact command(s).
+
+### How to test it
+Exact command(s) and expected behavior, including the test layer
+(`-m component`, `-m integration`, `-m golden`).
+
+### What I should see
+Expected output, UI state, files, logs, or traces.
+
+### Demo impact
+Whether and how the Golden Path (`uv run drone-eval analyse
+examples/demo_deployment --hypotheses examples/demo_hypotheses.json`)
+changed: a stage that became real, a stand-in that was removed, or new
+output. If it did not change, say why.
+
+### Current limitations
+Known missing behavior, mocks, stubs, assumptions, or unsupported cases.
+
+### Files changed
+Important files only.
+
+### Documentation updated
+Which of these were updated, and why any relevant one was not:
+- `docs/CURRENT_STATE.md`
+- `docs/ARCHITECTURE.md`
+- `docs/DEMO.md`
+- `docs/TESTING.md`
+- `docs/DECISIONS.md`
+
+If a feature cannot be demonstrated or tested, the agent must explain why
+before declaring the work complete. Never mark a component ✅ in
+`CURRENT_STATE.md` unless a test or the Golden Path exercises it. Use
+`docs/MILESTONE_REVIEW.md` at the end of each milestone.
 
 ## Linear
 

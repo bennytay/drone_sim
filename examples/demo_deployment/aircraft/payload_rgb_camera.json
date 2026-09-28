@@ -1,0 +1,14 @@
+{
+  "payloads": [
+    {
+      "id": "rgb-camera-01",
+      "kind": "rgb_camera",
+      "mass_kg": 0.32,
+      "dimensions_m": [
+        0.11,
+        0.09,
+        0.08
+      ]
+    }
+  ]
+}

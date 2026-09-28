@@ -3,6 +3,35 @@
 Drone-only tooling for reconstructing a deployment from operator data and
 verifying whether a known-working UAV is ready for that deployment.
 
+## Start here
+
+```bash
+uv sync --extra dev
+uv run drone-eval analyse examples/demo_deployment --hypotheses examples/demo_hypotheses.json
+uv run pytest
+```
+
+The first command installs the project. The second runs every implemented
+stage on a demo drone deployment and prints where the pipeline stops. The
+third runs the test suite.
+
+| Read | For |
+|---|---|
+| [`docs/PRODUCT.md`](docs/PRODUCT.md) | What the product is (two-minute explanation) |
+| [`docs/CURRENT_STATE.md`](docs/CURRENT_STATE.md) | What is actually built, partial, missing, or broken |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Intended architecture and, separately, the current implementation |
+| [`docs/DEMO.md`](docs/DEMO.md) | Golden Path demo: commands, expected output, real vs. stand-in |
+| [`docs/TESTING.md`](docs/TESTING.md) | Component, integration, and Golden Path test layers |
+| [`docs/MILESTONE_REVIEW.md`](docs/MILESTONE_REVIEW.md) | Milestone review checklist |
+| [`docs/DECISIONS.md`](docs/DECISIONS.md) | Architectural decisions |
+
+Not yet implemented: hypothesis generation, Scenario Spec, Isaac Sim/Lab
+integration, deterministic judges, variation and boundary search, and the
+readiness report. The capability descriptions below describe contracts and
+libraries; `CURRENT_STATE.md` says which ones run in a product path.
+
+## Capabilities in the codebase
+
 The first milestones establish a canonical, simulator-agnostic Deployment IR,
 a read-only local-folder ingestion loop, and first-class evidence for every
 material deployment value. The current implementation uses Deployment IR v0.1
@@ -32,7 +61,9 @@ simulator, or opaque customer model programmatically.
 Providers compose through one canonical payload type per data kind with
 mandatory SI units, a shared local ENU frame, and pinned references for large
 series. Built-in providers convert Deployment IR into canonical payloads and
-run an analytical energy-reserve and route-clearance graph end to end.
+run an analytical energy-reserve graph end to end. The swept-volume clearance
+model needs a site-geometry provider, which today exists only as a test
+fixture.
 
 A deterministic graph planner turns a hypothesis's observables into an
 acyclic plan of registered providers, surfaces unsatisfiable capabilities, and
@@ -53,11 +84,11 @@ and findings outside validated regions carry an explicit confidence cap.
 ## Development
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -e '.[dev]'
-pytest
+uv sync --extra dev
+uv run pytest                 # all layers; see docs/TESTING.md for -m component|integration|golden
 ```
+
+Without uv: `python -m venv .venv && source .venv/bin/activate && pip install -e '.[dev]' && pytest`.
 
 Generate the JSON Schema consumed by adapters and downstream services:
 

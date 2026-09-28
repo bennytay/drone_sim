@@ -1,0 +1,91 @@
+{
+  "contract_version": "0.1.0",
+  "hypotheses": [
+    {
+      "id": "hyp_roof_clearance",
+      "mechanism_id": "geometry_clearance.route.static_obstacle",
+      "affected_target": "minimum-clearance success criterion",
+      "variables": [
+        {"name": "route_altitude_m", "deployment_path": "/mission/route/points", "role": "cause"},
+        {"name": "site_geometry", "deployment_path": "/site/artifacts", "role": "context"}
+      ],
+      "causal_path": [
+        "The imaging pass flies 24 m above ground over a 12 m roof.",
+        "Tracking error and site-model error reduce the nominal clearance.",
+        "Clearance to the roof may fall below the 3 m success criterion."
+      ],
+      "supporting_references": [
+        {"kind": "deployment_evidence", "reference_id": "/success_criteria/1/target", "summary": "Operator requires at least 3 m obstacle clearance."},
+        {"kind": "deployment_evidence", "reference_id": "/site/artifacts/0/uri", "summary": "A coarse warehouse envelope model is supplied."},
+        {"kind": "taxonomy", "reference_id": "geometry_clearance.route.static_obstacle", "summary": "Catalog mechanism for static obstacle clearance."}
+      ],
+      "uncertainty": "medium",
+      "uncertainty_reason": "The site model is a coarse, non-survey envelope.",
+      "materiality": "critical",
+      "candidate_testabilities": ["geometric", "simulation"],
+      "confirm_if": [
+        {"observable": "collision", "description": "The swept route intersects site geometry."}
+      ],
+      "falsify_if": [
+        {"observable": "minimum_clearance_m", "description": "Clearance stays above the criterion along the whole route."}
+      ]
+    },
+    {
+      "id": "hyp_energy_reserve",
+      "mechanism_id": "energy_battery.reserve.route_demand",
+      "affected_target": "landing-reserve constraint",
+      "variables": [
+        {"name": "wind_speed_mps", "deployment_path": "/conditions/wind_speed_mps", "role": "cause"},
+        {"name": "takeoff_mass_kg", "deployment_path": "/vehicle/mass_kg", "role": "cause"},
+        {"name": "usable_energy_wh", "deployment_path": "/constraints/2/value", "role": "context"}
+      ],
+      "causal_path": [
+        "Forecast wind and payload mass raise route power demand.",
+        "Integrated route energy consumes the usable pack energy.",
+        "The landing reserve may fall below the declared fraction."
+      ],
+      "supporting_references": [
+        {"kind": "deployment_evidence", "reference_id": "/constraints/3/value", "summary": "Operator declares a 20 percent landing reserve."},
+        {"kind": "deployment_evidence", "reference_id": "/conditions/wind_speed_mps", "summary": "Forecast steady wind is 6.5 m/s."},
+        {"kind": "taxonomy", "reference_id": "energy_battery.reserve.route_demand", "summary": "Catalog mechanism for route energy demand."}
+      ],
+      "uncertainty": "medium",
+      "uncertainty_reason": "Forecast wind is not a route-local measurement and the pack energy is a nameplate value.",
+      "materiality": "high",
+      "candidate_testabilities": ["analytical", "simulation"],
+      "confirm_if": [
+        {"observable": "reserve_breach", "description": "Landing reserve falls below the declared fraction."}
+      ],
+      "falsify_if": [
+        {"observable": "remaining_energy_wh", "description": "Remaining energy exceeds the reserve at landing."}
+      ]
+    },
+    {
+      "id": "hyp_takeoff_mass",
+      "mechanism_id": "vehicle_operating_envelope.loading.mass",
+      "affected_target": "maximum takeoff mass",
+      "variables": [
+        {"name": "takeoff_mass_kg", "deployment_path": "/vehicle/mass_kg", "role": "cause"},
+        {"name": "payload_mass_kg", "deployment_path": "/payloads/0/mass_kg", "role": "cause"}
+      ],
+      "causal_path": [
+        "The camera payload adds mass to the configured aircraft.",
+        "Total takeoff mass may exceed the declared maximum."
+      ],
+      "supporting_references": [
+        {"kind": "deployment_evidence", "reference_id": "/vehicle/max_takeoff_mass_kg", "summary": "Aircraft record declares a 6.0 kg maximum takeoff mass."},
+        {"kind": "taxonomy", "reference_id": "vehicle_operating_envelope.loading.mass", "summary": "Catalog mechanism for takeoff mass."}
+      ],
+      "uncertainty": "low",
+      "uncertainty_reason": "Masses come from the aircraft and payload records.",
+      "materiality": "medium",
+      "candidate_testabilities": ["analytical"],
+      "confirm_if": [
+        {"observable": "takeoff_rejected", "description": "Configured takeoff mass exceeds the declared limit."}
+      ],
+      "falsify_if": [
+        {"observable": "mass_margin_kg", "description": "Configured takeoff mass is within the declared limit."}
+      ]
+    }
+  ]
+}
