@@ -27,6 +27,7 @@ from drone_sim.context import ContextOrchestrator, DeploymentState
 from drone_sim.coverage import ApplicabilityStatus, CoverageMap, assess_coverage
 from drone_sim.graph import EvaluationGoal
 from drone_sim.hypothesis import HypothesisGenerationContract
+from drone_sim.hypothesis import HypothesisStatus
 from drone_sim.investigation import (
     InvestigationAction,
     InvestigationState,
@@ -232,6 +233,8 @@ def run_golden_path(
     context = operating_context(deployment)
     runs = []
     for hypothesis in result.hypotheses.hypotheses:
+        if hypothesis.status in {HypothesisStatus.REJECTED, HypothesisStatus.MERGED}:
+            continue
         goal = EvaluationGoal.for_hypothesis(hypothesis)
         thresholds = bind_thresholds(deployment, goal.measures)
         outcome = router.investigate(
@@ -521,7 +524,33 @@ def main(argv: list[str] | None = None) -> int:
     analyse.add_argument(
         "--verbose", action="store_true", help="Show every mechanism and routing justification"
     )
+    agent = commands.add_parser(
+        "agent", help="Run the persisted agentic operator session on a deployment folder"
+    )
+    agent.add_argument("root", type=Path, help="Read-only deployment folder")
+    agent.add_argument("--work-dir", type=Path, help="Where session state and artifacts are written")
+    agent.add_argument("--answers", type=Path, help="Optional non-interactive JSON answers file")
+    agent.add_argument(
+        "--replay-hypotheses", type=Path,
+        help="Validated offline/replay hypotheses; demo defaults to its bundled replay fixture",
+    )
+    agent.add_argument("--fresh", action="store_true", help="Discard cached context state")
     args = parser.parse_args(argv)
+
+    if args.command == "agent":
+        from drone_sim.agent_session import render_agent_session, run_agent_session
+
+        work_dir = args.work_dir or Path("work") / args.root.resolve().name
+        try:
+            state, result = run_agent_session(
+                args.root, work_dir, answers_path=args.answers,
+                replay_hypotheses=args.replay_hypotheses, fresh=args.fresh,
+            )
+        except (OSError, ValueError) as error:
+            print(f"drone-eval: {error}", file=sys.stderr)
+            return 1
+        print(render_agent_session(state, result))
+        return 2 if result.stopped_at_context else 0
 
     work_dir = args.work_dir or Path("work") / args.root.resolve().name
     try:

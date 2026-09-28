@@ -288,7 +288,7 @@ than being silently resolved by an LLM.
 ## Current implementation
 
 This is what runs today. Reproduce it with
-`uv run drone-eval analyse examples/demo_deployment --hypotheses examples/demo_hypotheses.json`
+`uv run drone-eval agent examples/demo_deployment`
 (see [`DEMO.md`](DEMO.md)).
 
 ```text
@@ -307,10 +307,10 @@ Context readiness gate (drone_hypothesis_generation_v1)  ✅  validation.py
 Failure taxonomy + applicability map                     🟡  failure_taxonomy.py ✅, coverage.py 🟡 (context-exists rules only)
   │
   ▼
-Failure hypothesis engine                                ⚪  generator missing
-  │  ← stand-in: hand-authored examples/demo_hypotheses.json (FailureHypothesis contract ✅)
+Failure hypothesis session                               🟡  agent_session.py + replay proposal fixture
+  │  optional review via answers file; hosted generation remains an edge
   ▼
-Investigation policy (first action only)                 🟡  investigation.py (not looped; 🔴 ordering bug)
+Investigation policy + persisted trace                   🟡  investigation.py, investigation_loop.py, agent_session.py
   │
   ▼
 Capability / model selection                             ✅  capabilities.py, registry.py, graph.py (GraphPlanner)
@@ -342,8 +342,8 @@ Post-deployment learning                                 🟡  trust.py ledger A
 - **Real, end to end:** folder to evidence-backed IR, readiness gate,
   applicability map, capability planning, in-process execution, and fidelity
   routing, for the energy-reserve and takeoff-mass mechanisms.
-- **Stand-ins, clearly labelled in output:** hypotheses (hand-authored file)
-  and decision thresholds (`golden_path.bind_thresholds`). Both live only in
+- **Stand-ins, clearly labelled in output:** replay hypotheses and decision
+  thresholds (`golden_path.bind_thresholds`). Both live only in
   the demo layer; no core module depends on them.
 - **Stops with explicit gaps:** static-obstacle clearance. The planner reports
   that no provider can produce `site_geometry`.
@@ -370,8 +370,9 @@ knowledge, stopping: imported by nothing in src (library + tests only)
 
 ### Architectural gaps to be aware of
 
-- The context "agent" and every downstream step are deterministic. No LLM
-  integration exists yet, so the "agentic edges" are currently manual inputs.
+- The operator session is replay-first and persists its trace outside the
+  deployment folder. Hosted LLM output remains optional and bounded by typed
+  contracts; the demo does not make a hosted call.
 - Deployment IR has no battery or energy fields. Energy enters through
   `constraints` using a unit convention understood only by
   `reference_tools.py`.
