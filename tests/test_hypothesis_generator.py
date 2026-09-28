@@ -8,6 +8,7 @@ from drone_sim.context import ContextOrchestrator
 from drone_sim.coverage import assess_coverage
 from drone_sim.hypothesis_generator import generate_hypotheses
 from drone_sim.llm import LLMResponse, StructuredOutputRunner
+from drone_sim.knowledge_retrieval import retrieve_knowledge
 
 
 class Replay:
@@ -42,11 +43,13 @@ def test_demo_generation_is_grounded_measurable_and_coverage_accounted(
     tmp_path: Path,
 ) -> None:
     evidence = demo_evidence(tmp_path)
+    knowledge = retrieve_knowledge(Path("examples/demo_deployment"))
     result = generate_hypotheses(
         runner=StructuredOutputRunner(Replay(replay_hypotheses())),
         model="replay",
         evidence=evidence,
         coverage=assess_coverage(evidence.deployment),
+        knowledge=knowledge,
     )
 
     assert {item.id for item in result.contract.hypotheses} >= {
@@ -66,6 +69,10 @@ def test_demo_generation_is_grounded_measurable_and_coverage_accounted(
         "geometry_clearance.route.static_obstacle",
     }
     assert any(entry.state == "missing" for entry in result.coverage)
+    assert all(
+        any(reference.kind == "internal_knowledge" for reference in item.supporting_references)
+        for item in result.contract.hypotheses
+    )
 
 
 def test_unknown_evidence_reference_fails_closed(tmp_path: Path) -> None:

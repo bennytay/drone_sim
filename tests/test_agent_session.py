@@ -22,6 +22,7 @@ def test_agent_session_runs_demo_offline_and_persists_readable_trace(tmp_path: P
     assert (tmp_path / "agent_session.json").exists()
     assert (tmp_path / "generated_hypotheses.json").exists()
     assert (tmp_path / "hypothesis_generation_audit.json").exists()
+    assert (tmp_path / "knowledge_bundle.json").exists()
     assert any(event.stage == "facts" for event in state.events)
     assert any(event.stage == "document" and event.anchor == "operations/battery_spec.md#3-3" for event in state.events)
     assert state.document_candidates[0].origin.value == "inferred"

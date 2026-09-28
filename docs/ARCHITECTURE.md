@@ -369,7 +369,8 @@ interfaces ◄── reference_tools, graph, routing
 graph ◄── routing
 trust ◄── routing
 golden_path ──► context, coverage, hypothesis, investigation, graph, registry, reference_tools, routing
-knowledge, stopping: imported by nothing in src (library + tests only)
+knowledge ◄── knowledge_retrieval ◄── agent_session, hypothesis_generator
+stopping: imported by nothing in src (library + tests only)
 ```
 
 ### Architectural gaps to be aware of

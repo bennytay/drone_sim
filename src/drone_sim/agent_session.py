@@ -41,6 +41,7 @@ from drone_sim.llm import (
 from drone_sim.hypothesis_generator import HypothesisProposalBatch, generate_hypotheses
 from drone_sim.investigation import InvestigationState, ResultKind, TestResult
 from drone_sim.investigation_loop import InvestigationTrace, advance
+from drone_sim.knowledge_retrieval import retrieve_knowledge
 from drone_sim.llm_safety import DeploymentLLMPolicy, prepare_untrusted_text
 from drone_sim.llm_ledger import (
     CallLedger,
@@ -362,10 +363,18 @@ def run_agent_session(
             ),
         )
         initial_coverage = assess_coverage(preliminary.evidence.deployment)
+        knowledge = retrieve_knowledge(
+            root,
+            model_world_prompts=(
+                "Multirotor energy reserve and obstacle clearance deserve explicit hypotheses when route, loading, and site evidence make them applicable.",
+            ),
+        )
+        _save(knowledge, work_dir / "knowledge_bundle.json")
         generation = generate_hypotheses(
             runner=hypothesis_runner, model=reasoning_model,
             evidence=preliminary.evidence,
             coverage=initial_coverage,
+            knowledge=knowledge,
             prompt=_prompt(
                 "hypothesis-generation",
                 "Propose drone-only failure hypotheses using this JSON Schema:\n"
@@ -373,7 +382,8 @@ def run_agent_session(
                 + "\nEvidence:\n" + prepared_ir.delimited_text
                 + "\nCoverage:\n" + initial_coverage.model_dump_json()
                 + "\nTaxonomy:\n" + DEFAULT_FAILURE_TAXONOMY.model_dump_json()
-                + "\nCapability ontology:\n" + DEFAULT_CAPABILITY_ONTOLOGY.model_dump_json(),
+                + "\nCapability ontology:\n" + DEFAULT_CAPABILITY_ONTOLOGY.model_dump_json()
+                + "\nKnowledge bundle:\n" + knowledge.model_dump_json(),
             ),
         )
         generated = generation.contract

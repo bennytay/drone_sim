@@ -98,6 +98,7 @@ Files written to `work/demo_deployment/` (git-ignored):
 | `evidence.json` | The full evidence-backed Deployment IR, with every fact's source anchor |
 | `coverage.json` | Applicability of all 32 mechanisms, with predicate evidence |
 | `generated_hypotheses.json` | Contract-validated generator output after optional accept/reject review |
+| `knowledge_bundle.json` | Provenance-qualified folder, curated platform, and model-prompt knowledge consumed by generation |
 | `hypothesis_generation_audit.json` | Per-mechanism covered/missing/unmeasurable accounting after deterministic grounding checks |
 | `agent_session.json` | Persistent operator trace, questions, and evidence-bounded summary |
 | `llm_ledger.json` | Every replay/live LLM call, input references, context trace links, validation outcome, token usage, latency, and cost |

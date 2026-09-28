@@ -32,7 +32,8 @@
         "supporting_references": [
           {"kind": "deployment_evidence", "reference_id": "/conditions/wind_speed_mps", "summary": "Forecast steady wind is 6.5 m/s."},
           {"kind": "deployment_evidence", "reference_id": "/vehicle/mass_kg", "summary": "Configured takeoff mass is 4.2 kg."},
-          {"kind": "taxonomy", "reference_id": "energy_battery.reserve.route_demand", "summary": "Catalog mechanism for route energy demand."}
+          {"kind": "taxonomy", "reference_id": "energy_battery.reserve.route_demand", "summary": "Catalog mechanism for route energy demand."},
+          {"kind": "internal_knowledge", "reference_id": "platform-energy_battery.reserve.route_demand", "summary": "Curated drone incident pattern links route demand to landing reserve."}
         ],
         "uncertainty": "medium",
         "uncertainty_reason": "Forecast wind is not a route-local measurement and the pack energy is a nameplate value.",
@@ -56,7 +57,8 @@
         "supporting_references": [
           {"kind": "deployment_evidence", "reference_id": "/vehicle/mass_kg", "summary": "Configured takeoff mass is 4.2 kg."},
           {"kind": "deployment_evidence", "reference_id": "/vehicle/max_takeoff_mass_kg", "summary": "Approved maximum takeoff mass is 6.0 kg."},
-          {"kind": "taxonomy", "reference_id": "vehicle_operating_envelope.loading.mass", "summary": "Catalog mechanism for takeoff loading."}
+          {"kind": "taxonomy", "reference_id": "vehicle_operating_envelope.loading.mass", "summary": "Catalog mechanism for takeoff loading."},
+          {"kind": "internal_knowledge", "reference_id": "platform-vehicle_operating_envelope.loading.mass", "summary": "Curated drone loading pattern motivates a takeoff mass-margin check."}
         ],
         "uncertainty": "low",
         "uncertainty_reason": "Both configured and approved masses are directly anchored deployment facts.",
@@ -80,7 +82,8 @@
         "supporting_references": [
           {"kind": "deployment_evidence", "reference_id": "/mission/route/points/1/position/altitude_m", "summary": "The roof inspection waypoint is at 24.0 m above ground."},
           {"kind": "deployment_evidence", "reference_id": "/site/reference_point/altitude_m", "summary": "The site reference elevation is 12.0 m mean sea level."},
-          {"kind": "taxonomy", "reference_id": "geometry_clearance.route.static_obstacle", "summary": "Catalog mechanism for static obstacle clearance."}
+          {"kind": "taxonomy", "reference_id": "geometry_clearance.route.static_obstacle", "summary": "Catalog mechanism for static obstacle clearance."},
+          {"kind": "internal_knowledge", "reference_id": "platform-geometry_clearance.route.static_obstacle", "summary": "Curated drone clearance pattern links position error and swept volume to collision exposure."}
         ],
         "uncertainty": "medium",
         "uncertainty_reason": "The route is anchored but the available site mesh has not yet established roof surface geometry.",
