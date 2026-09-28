@@ -6,7 +6,7 @@ Intended behavior lives in [`ARCHITECTURE.md`](ARCHITECTURE.md#intended-architec
 when the two disagree, this file describes reality.
 
 - **Audited at:** `d5554ba` plus the BEN-79 completion-gate change.
-- **Test suite at audit:** 174 passing (`uv run pytest`).
+- **Test suite at audit:** 177 passing (`uv run pytest`).
 - **See it run:** [`DEMO.md`](DEMO.md). **Test layers:** [`TESTING.md`](TESTING.md).
 
 Legend: ✅ implemented and working · 🟡 partial · ⚪ planned / not
@@ -44,6 +44,7 @@ readiness report. Replay mode requires no API key; live mode reads
 | LLM evaluation harness | ✅ replay scorecard/baseline comparison · 🟡 live corpus runs | `llm_eval.py`, `llm_eval_cli.py`, `benchmarks/` | `test_llm_eval.py` |
 | Document extraction | ✅ verified text/DOCX line and PDF page proposals; wired document-only demo fact | `document_extraction.py`, `agent_session.py` | `test_document_extraction.py`, `test_agent_session.py` |
 | Agent tool registry | 🟡 core read-only discovery/document/taxonomy tools wired | `agent_tools.py`, `agent_session.py` | `test_agent_tools.py`, `test_agent_session.py` |
+| Schema and telemetry mapping | ✅ deterministic allowed conversions, persistent schema cache, KML route and telemetry signals | `schema_mapping.py` | `test_schema_mapping.py` |
 | Hypothesis **generation** | ✅ typed replay/live edge | `hypothesis_generator.py`, `agent_session.py` | `test_hypothesis_generator.py`, `test_agent_session.py`, `test_golden_path.py` |
 | Knowledge enrichment | 🟡 contract only | `knowledge.py` | `test_knowledge.py` |
 | Capability ontology + mechanism bindings | ✅ | `capabilities.py` | `test_capabilities.py` |
