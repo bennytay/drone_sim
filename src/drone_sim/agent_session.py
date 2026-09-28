@@ -19,6 +19,7 @@ from drone_sim.document_extraction import (
     DocumentExtractionResponse,
     extract_document_candidates,
 )
+from drone_sim.agent_tools import AgentToolRuntime
 from drone_sim.golden_path import GoldenPathResult, _verdict_line, run_golden_path
 from drone_sim.hypothesis import HypothesisGenerationContract, HypothesisStatus
 from drone_sim.ir import StrictModel
@@ -243,6 +244,17 @@ def run_agent_session(
     # Reconstruct before the agent sees any deployment data. This is also the
     # resume boundary: context state is deterministic and persisted separately.
     preliminary = run_golden_path(root, work_dir, fresh=fresh)
+    tool_runtime = AgentToolRuntime(
+        root,
+        preliminary.state,
+        ledger_path=work_dir / "tool_ledger.json",
+        state_path=work_dir / "state.json",
+    )
+    tool_runtime.list_index()
+    tool_runtime.search_files("battery specification")
+    if (root / "operations" / "battery_spec.md").exists():
+        tool_runtime.parse_file("operations/battery_spec.md")
+        tool_runtime.read_text_span("operations/battery_spec.md", 1, 5)
     if live and not llm_policy.allow_hosted_llm:
         state = AgentSessionState(
             root=str(root),
