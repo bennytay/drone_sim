@@ -236,3 +236,24 @@ silently discarding overlapping proposals.
 
 **Revisit when:** A validated capability registry can supply typed quantitative
 threshold references without letting free-form agent output define them.
+
+## ADR-016: Capabilities are tool-independent causal transformations
+
+**Decision:** Define a versioned capability ontology in which each capability
+is one causal transformation with typed canonical inputs, outputs, and named
+measures. Keep fidelity, cost, runtime, and implementation on registered
+providers. Represent tightly coupled feedback as closed-loop composite
+capabilities provided as a unit. Bind every failure-taxonomy leaf to a minimum
+capability set and validate that binding for dataflow closure and outcome
+coverage. Reject vendor or simulator names in the ontology.
+
+**Rationale:** The planner must reason about what a hypothesis needs, not which
+product computes it. Capabilities at the granularity of one causal
+transformation let multiple fidelity levels satisfy the same need, keep
+dependency graphs acyclic, and let new providers become available without
+changing hypothesis semantics.
+
+**Revisit when:** Real providers routinely need to split or merge capabilities
+to be registered, or closed-loop composites become too coarse to route
+fidelity economically. Version the ontology rather than reinterpreting existing
+bindings.

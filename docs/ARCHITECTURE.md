@@ -126,6 +126,14 @@ outputs, cost, fidelity, validity region, and evidence requirements. Canonical
 capabilities are separate from vendor implementations so a backend can be
 replaced without changing test intent.
 
+A versioned capability ontology names what can be computed — for example wind
+field estimation, route energy demand, trajectory clearance, or closed-loop
+flight — through typed canonical data kinds and named measures, without
+fidelity, cost, or vendor information. Every failure-taxonomy mechanism is
+bound to a minimum capability set whose inputs are satisfiable from Deployment
+IR and whose measures cover the mechanism's observable outcomes. Closed-loop
+composites are provided as a unit so planning graphs remain acyclic.
+
 ### Scenario Spec
 
 Scenario Spec is the simulator- and model-agnostic contract for a test. It
