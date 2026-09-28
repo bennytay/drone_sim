@@ -1,0 +1,34 @@
+{
+  "manifest_version": "0.1.0",
+  "id": "isaac.closed-loop-flight",
+  "version": "0.1.0",
+  "name": "Isaac Sim closed-loop flight",
+  "description": "Software-in-the-loop flight of the deployed autonomy with rigid-body dynamics, rendered sensors, and site assets.",
+  "provides": [
+    {"capability_id": "autonomy.closed_loop_flight"},
+    {"capability_id": "sensing.observation_synthesis"},
+    {"capability_id": "energy.route_demand"}
+  ],
+  "airframes": ["multirotor", "vtol"],
+  "validity_region": {
+    "bounds": [
+      {"variable": "wind_speed_mps", "minimum": 0, "maximum": 25, "unit": "m/s"}
+    ]
+  },
+  "fidelity": "high_fidelity_simulation",
+  "errors": [
+    {
+      "measure": "position_error_m",
+      "kind": "distribution",
+      "basis": "Seeded Monte Carlo over sensor noise and gust realisations"
+    }
+  ],
+  "runtime": {"typical_runtime_s": 900, "compute": "gpu", "min_memory_gb": 24},
+  "cost": "high",
+  "execution_mode": "remote_service",
+  "reproducibility": {
+    "deterministic": false,
+    "seed_controlled": true,
+    "environment": "container:isaac-sim-4.5-drone-sitl"
+  }
+}

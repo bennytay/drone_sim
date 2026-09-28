@@ -10,6 +10,7 @@ from drone_sim.failure_taxonomy import DEFAULT_FAILURE_TAXONOMY, FailureTaxonomy
 from drone_sim.hypothesis import FailureHypothesis, HypothesisGenerationContract
 from drone_sim.ir import DeploymentIR
 from drone_sim.provenance import EvidenceBackedDeployment
+from drone_sim.registry import ToolManifest, ToolRegistry
 from drone_sim.validation import ReadinessReport
 
 __all__ = [
@@ -24,5 +25,7 @@ __all__ = [
     "FailureTaxonomy",
     "HypothesisGenerationContract",
     "ReadinessReport",
+    "ToolManifest",
+    "ToolRegistry",
     "assess_coverage",
 ]

@@ -257,3 +257,24 @@ changing hypothesis semantics.
 to be registered, or closed-loop composites become too coarse to route
 fidelity economically. Version the ontology rather than reinterpreting existing
 bindings.
+
+## ADR-017: Providers register declarative manifests against the ontology
+
+**Decision:** Every model or tool registers a versioned `ToolManifest` that
+binds it to ontology capabilities with canonical ports and measures, declares
+airframes, conditional provisions, claimed validity region, fidelity, cost,
+runtime, execution mode, per-measure errors, empirical trust regions,
+disclosure, and reproducibility. Registration rejects non-canonical contracts.
+Opaque providers must run behind a service boundary and supply error and
+validation evidence. Region membership is three-valued.
+
+**Rationale:** The planner can only compose and compare providers it
+understands from metadata. Declaring validity separately from validated trust
+prevents extrapolation from masquerading as evidence, and requiring
+contract-level evidence for opaque models lets customers keep internals private
+without weakening credibility checks.
+
+**Revisit when:** Real providers need richer validity descriptions than
+per-variable intervals, airframes, and tags, or runtime and cost must be
+estimated per scenario rather than declared per provider.
+

@@ -1,0 +1,51 @@
+{
+  "manifest_version": "0.1.0",
+  "id": "fleet.wind-margin-regression",
+  "version": "2.1.0",
+  "name": "Fleet wind margin regression",
+  "description": "Regression of control margin against wind and mass fitted to fleet flight logs.",
+  "owner": "operator-fleet-analytics",
+  "provides": [
+    {
+      "capability_id": "dynamics.performance_margin",
+      "measures": ["control_margin", "control_saturation"]
+    }
+  ],
+  "airframes": ["multirotor"],
+  "validity_region": {
+    "bounds": [
+      {"variable": "wind_speed_mps", "minimum": 0, "maximum": 14, "unit": "m/s"},
+      {"variable": "takeoff_mass_kg", "minimum": 2, "maximum": 7, "unit": "kg"}
+    ]
+  },
+  "fidelity": "empirical",
+  "errors": [
+    {
+      "measure": "control_margin",
+      "kind": "standard_deviation",
+      "value": 0.06,
+      "unit": "1",
+      "basis": "Residual standard deviation on held-out fleet flights"
+    }
+  ],
+  "trust_regions": [
+    {
+      "region": {
+        "bounds": [
+          {"variable": "wind_speed_mps", "minimum": 0, "maximum": 9, "unit": "m/s"},
+          {"variable": "temperature_c", "minimum": 0, "maximum": 35, "unit": "C"}
+        ]
+      },
+      "evidence_ref": "dataset:fleet-logs-2026q2",
+      "sample_count": 412
+    }
+  ],
+  "runtime": {"typical_runtime_s": 0.05},
+  "cost": "negligible",
+  "execution_mode": "in_process",
+  "disclosure": "documented",
+  "reproducibility": {
+    "deterministic": true,
+    "artifact_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+  }
+}
