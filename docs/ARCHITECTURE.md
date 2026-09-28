@@ -96,6 +96,12 @@ mechanisms. LLMs may propose, refine, and prioritize hypotheses, but each
 hypothesis must state its applicability, required evidence, causal mechanism,
 and testable outcome. Coverage and stopping rules remain explicit.
 
+The hypothesis contract preserves concise causal reasoning as a sequence and
+requires deployment-evidence support, an uncertainty basis, candidate test
+modalities, and both confirming and falsifying observations. It never lets an
+agent assert a quantitative pass/fail threshold; registered deterministic
+judges bind observations to versioned criteria.
+
 A versioned drone-only failure taxonomy supplies the systematic discovery
 surface. Its stable hierarchy separates broad domains, mechanism branches, and
 testable leaves. Leaves identify causal variables, observable outcomes, and the
