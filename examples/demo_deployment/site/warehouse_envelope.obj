@@ -1,0 +1,16 @@
+# Coarse box envelope of the Alexandria warehouse (fictional demo geometry).
+# Local metres: x east, y north, z up. Not survey grade.
+v -30 20 0
+v 30 20 0
+v 30 45 0
+v -30 45 0
+v -30 20 12
+v 30 20 12
+v 30 45 12
+v -30 45 12
+f 1 2 3 4
+f 5 6 7 8
+f 1 2 6 5
+f 2 3 7 6
+f 3 4 8 7
+f 4 1 5 8

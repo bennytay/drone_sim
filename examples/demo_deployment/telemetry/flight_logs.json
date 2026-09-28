@@ -1,0 +1,11 @@
+{
+  "vehicle_id": "inspection-uav-01",
+  "flight_logs": [
+    {
+      "id": "reference-flight-log",
+      "uri": "telemetry/reference-flight.csv",
+      "role": "telemetry",
+      "media_type": "text/csv"
+    }
+  ]
+}

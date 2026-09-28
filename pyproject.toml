@@ -16,9 +16,16 @@ dev = ["pytest>=8,<9"]
 deployment-ir-schema = "drone_sim.schema:main"
 deployment-evidence-schema = "drone_sim.evidence_schema:main"
 deployment-context = "drone_sim.context_cli:main"
+drone-eval = "drone_sim.golden_path:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = "--strict-markers"
+markers = [
+    "component: one module or contract in isolation (see docs/TESTING.md)",
+    "integration: several components wired together (see docs/TESTING.md)",
+    "golden: the Golden Path product workflow (see docs/DEMO.md)",
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/drone_sim"]

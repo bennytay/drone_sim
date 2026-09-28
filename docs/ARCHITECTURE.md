@@ -1,9 +1,25 @@
 # Architecture
 
-This document is the canonical current system model. Product intent lives in
-`PRODUCT.md`; the reasons behind settled choices live in `DECISIONS.md`.
+This document has two deliberately separate parts:
 
-## System flow
+1. **[Intended architecture](#intended-architecture)** — the target system.
+   Written in the present tense as a design, *not* a claim that it exists.
+2. **[Current implementation](#current-implementation)** — what the code does
+   today, with a status on every stage.
+
+Per-component detail, limitations, and known defects live in
+[`CURRENT_STATE.md`](CURRENT_STATE.md). Product intent lives in `PRODUCT.md`;
+the reasons behind settled choices live in `DECISIONS.md`.
+
+Legend: ✅ implemented · 🟡 partial · ⚪ not implemented · 🔴 known defect.
+
+## Intended architecture
+
+> Everything in this section is the **target design**. Each stage heading
+> carries its current status; do not read an unmarked sentence here as proof
+> that behavior exists. Check [Current implementation](#current-implementation).
+
+### System flow
 
 ```text
 local-folder context agent
@@ -22,9 +38,10 @@ Each arrow is a typed boundary. Agent decisions can choose what to investigate,
 but canonical state, execution inputs, outputs, and verdicts remain inspectable
 and reproducible outside an LLM context window.
 
-## Stages
+### Stages
 
-### Local-folder context agent
+
+#### Local-folder context agent — current status: ✅
 
 The context layer receives operator-controlled deployment sources read-only. It
 indexes before reading, searches according to unresolved dependencies, and
@@ -59,7 +76,7 @@ have been exhausted. Clarification requests name the unresolved material field,
 the evidence paths already searched, and the concrete question needed to cross
 the readiness threshold.
 
-### Deployment IR
+#### Deployment IR — current status: ✅
 
 Deployment IR is the canonical description of deployment reality and intent:
 vehicle, payload, mission, route, environment, conditions, autonomy,
@@ -89,7 +106,7 @@ resolution record accounts for the selected and rejected candidates. This
 gives the context agent a repeatable “what is unresolved?” query and prevents
 hypothesis generation or testing before its declared context threshold is met.
 
-### Failure hypothesis engine
+#### Failure hypothesis engine — current status: 🟡 taxonomy, coverage, contract · ⚪ generator
 
 The hypothesis engine maps grounded deployment context to plausible failure
 mechanisms. LLMs may propose, refine, and prioritize hypotheses, but each
@@ -118,7 +135,7 @@ escalated only through investigation results. The coverage map also records
 residual unknown risks, so catalog coverage is never misrepresented as a safety
 proof.
 
-### Capability and model registry
+#### Capability and model registry — current status: ✅
 
 The registry describes available parsers, analytical models, geometry checks,
 learned models, physics tools, simulators, and judges through typed inputs,
@@ -158,7 +175,7 @@ nodes, and unsatisfiable measures, providers, or inputs are returned as explicit
 gaps. Execution records input and output digests, lineage, failures, skipped
 dependents, and per-measure uncertainty sources.
 
-### Scenario Spec
+#### Scenario Spec — current status: ⚪
 
 Scenario Spec is the simulator- and model-agnostic contract for a test. It
 captures initial state, relevant environment, variations, interventions,
@@ -169,7 +186,7 @@ in the canonical spec.
 An LLM must not generate arbitrary simulator code in the core path. It chooses
 from typed, validated capabilities and parameters.
 
-### Execution backends and fidelity routing
+#### Execution backends and fidelity routing — current status: 🟡 analytical + routing · ⚪ Isaac
 
 The fidelity router starts with the cheapest model credible for the causal
 failure mechanism. Examples include static constraints, route geometry,
@@ -205,35 +222,35 @@ confidence accordingly. Routing excludes unsupported providers, prefers better
 trust at equal fidelity, escalates untrusted results, and widens optimistic
 declared errors with empirical residual bounds.
 
-### Deterministic judges
+#### Deterministic judges — current status: ⚪
 
 Backends emit canonical observations and artifacts. Deterministic judges apply
 versioned metrics and thresholds to establish results. LLMs may explain a
 finding, but they do not establish the underlying pass, fail, margin, or
 measurement.
 
-### Adaptive boundary search
+#### Adaptive boundary search — current status: ⚪
 
 The investigation loop varies causally relevant conditions, searches for the
 transition between safe and failing behavior, and allocates fidelity where it
 changes the decision. Persistent state tracks explored regions, uncertainty,
 coverage, and stopping reasons.
 
-### Readiness report
+#### Readiness report — current status: ⚪
 
 The report summarizes deployment readiness, safe margins, failure boundaries,
 unresolved risks, assumptions, and recommended mitigations. Every material
 claim links to source evidence, scenario configuration, model version,
 execution artifacts, and judge output.
 
-### Optional post-deployment learning
+#### Optional post-deployment learning — current status: 🟡 trust ledger only
 
 Observed deployment outcomes can be compared with predictions to measure
 residuals and calibrate future audits. Customer-private learning comes first.
 Cross-customer learning requires separate governance and must preserve the
 validity and provenance of learned updates.
 
-## Responsibility boundary
+### Responsibility boundary
 
 Agentic components discover context, form hypotheses, plan investigations,
 select registered capabilities, decide when to escalate, and summarize results.
@@ -244,3 +261,98 @@ Provenance and uncertainty cross every stage. A material field or finding must
 distinguish observed evidence, deterministic derivation, model output, and
 explicit assumption. Conflicts and missing information remain visible rather
 than being silently resolved by an LLM.
+
+## Current implementation
+
+This is what runs today. Reproduce it with
+`uv run drone-eval analyse examples/demo_deployment --hypotheses examples/demo_hypotheses.json`
+(see [`DEMO.md`](DEMO.md)).
+
+```text
+Local deployment folder (read-only)                     ✅  examples/demo_deployment/
+  │  DirectoryIndex → ranked search → AdapterRegistry
+  ▼
+Context "agent" (deterministic; no LLM)                  ✅  context.py, reconstruction.py, adapters.py
+  │  candidates, entity links, trace → state.json
+  ▼
+Evidence-backed Deployment IR                            ✅  ir.py, provenance.py
+  │
+  ▼
+Context readiness gate (drone_hypothesis_generation_v1)  ✅  validation.py
+  │  stops here unless READY (conflicts cannot yet be resolved)
+  ▼
+Failure taxonomy + applicability map                     🟡  failure_taxonomy.py ✅, coverage.py 🟡 (context-exists rules only)
+  │
+  ▼
+Failure hypothesis engine                                ⚪  generator missing
+  │  ← stand-in: hand-authored examples/demo_hypotheses.json (FailureHypothesis contract ✅)
+  ▼
+Investigation policy (first action only)                 🟡  investigation.py (not looped; 🔴 ordering bug)
+  │
+  ▼
+Capability / model selection                             ✅  capabilities.py, registry.py, graph.py (GraphPlanner)
+  │
+  ▼
+Scenario Spec                                            ⚪  not implemented — EvaluationGoal + OperatingContext used directly
+  │
+  ▼
+Models / geometry / Isaac                                🟡  reference_tools.py: rule + analytical energy ✅,
+  │                                                          swept-volume clearance 🟡 (no site-geometry provider), Isaac ⚪
+  ▼
+Execution with lineage + fidelity routing                ✅  graph.py (execute), routing.py (FidelityRouter)
+  │  ← stand-in: thresholds bound from IR by golden_path.bind_thresholds
+  ▼
+Deterministic judges                                     ⚪  not implemented
+  │
+  ▼
+Adaptive scenario / boundary search                      ⚪  not implemented (one nominal condition only)
+  │
+  ▼
+Readiness report                                         ⚪  not implemented — drone-eval prints a labelled demo summary
+  │
+  ▼
+Post-deployment learning                                 🟡  trust.py ledger API; no outcome ingestion
+```
+
+### Where the Golden Path stops
+
+- **Real, end to end:** folder to evidence-backed IR, readiness gate,
+  applicability map, capability planning, in-process execution, and fidelity
+  routing, for the energy-reserve and takeoff-mass mechanisms.
+- **Stand-ins, clearly labelled in output:** hypotheses (hand-authored file)
+  and decision thresholds (`golden_path.bind_thresholds`). Both live only in
+  the demo layer; no core module depends on them.
+- **Stops with explicit gaps:** static-obstacle clearance. The planner reports
+  that no provider can produce `site_geometry`.
+- **Absent:** Scenario Spec, Isaac, judges, variation and boundary search,
+  readiness report, job runtime, API, UI.
+
+### Module dependencies (actual imports)
+
+```text
+ir ◄── everything
+adapters ◄── reconstruction ◄── context ◄── context_cli, golden_path
+provenance ◄── context, validation, routing, trust
+validation ◄── context
+failure_taxonomy ◄── capabilities, coverage, hypothesis
+coverage ◄── hypothesis, investigation, stopping
+capabilities ◄── registry, interfaces, graph, routing
+registry ◄── interfaces, reference_tools, graph, trust, routing
+interfaces ◄── reference_tools, graph, routing
+graph ◄── routing
+trust ◄── routing
+golden_path ──► context, coverage, hypothesis, investigation, graph, registry, reference_tools, routing
+knowledge, stopping: imported by nothing in src (library + tests only)
+```
+
+### Architectural gaps to be aware of
+
+- The context "agent" and every downstream step are deterministic. No LLM
+  integration exists yet, so the "agentic edges" are currently manual inputs.
+- Deployment IR has no battery or energy fields. Energy enters through
+  `constraints` using a unit convention understood only by
+  `reference_tools.py`.
+- Scene inputs (OBJ/GLB/point clouds) are hashed and summarized, but never
+  converted into geometry that an evaluator can consume.
+- `validation.ReadinessReport` is context completeness, not the product's
+  deployment readiness report.

@@ -1,0 +1,10 @@
+{
+  "forecast": {
+    "observed_at": "2026-10-01T22:30:00Z",
+    "temperature": 19.0,
+    "wind_mps": 6.5,
+    "wind_direction": 170,
+    "precipitation_mm_h": 0,
+    "visibility": 10000
+  }
+}

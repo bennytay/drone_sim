@@ -1,0 +1,19 @@
+{
+  "operating_site": {
+    "site_name": "Alexandria warehouse",
+    "reference_point": {
+      "latitude_deg": -33.8688,
+      "longitude_deg": 151.2093,
+      "altitude_m": 12.0,
+      "altitude_reference": "mean_sea_level"
+    },
+    "artifacts": [
+      {
+        "id": "site-envelope",
+        "uri": "site/warehouse_envelope.obj",
+        "role": "site_model",
+        "media_type": "model/obj"
+      }
+    ]
+  }
+}

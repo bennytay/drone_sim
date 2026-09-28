@@ -1,0 +1,7 @@
+{
+  "deployment_id": "warehouse-roof-inspection-001",
+  "vehicle_id": "inspection-uav-01",
+  "site_name": "Alexandria warehouse",
+  "prepared_by": "Demo operations team",
+  "note": "Fictional demo deployment. Never use to authorize a real flight."
+}
