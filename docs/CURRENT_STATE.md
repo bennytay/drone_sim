@@ -6,7 +6,7 @@ Intended behavior lives in [`ARCHITECTURE.md`](ARCHITECTURE.md#intended-architec
 when the two disagree, this file describes reality.
 
 - **Audited at:** `d5554ba` plus the BEN-79 completion-gate change.
-- **Test suite at audit:** 185 passing (`uv run pytest`).
+- **Test suite at audit:** 188 passing (`uv run pytest`).
 - **See it run:** [`DEMO.md`](DEMO.md). **Test layers:** [`TESTING.md`](TESTING.md).
 
 Legend: ✅ implemented and working · 🟡 partial · ⚪ planned / not
@@ -36,7 +36,7 @@ readiness report. Replay mode requires no API key; live mode reads
 | Parsers / source adapters | ✅ | `adapters.py` | `test_adapters.py` |
 | Deployment IR | ✅ | `ir.py`, `schema.py` | `test_ir.py` |
 | Provenance and uncertainty | ✅ | `provenance.py`, `evidence_schema.py` | `test_provenance.py` |
-| Conflict and completeness validation | ✅ detection · 🟡 resolution | `validation.py` | `test_validation.py`, `test_context.py` |
+| Conflict and completeness validation | ✅ detection + operator-confirmed resolution | `validation.py`, `conflict_assistant.py` | `test_validation.py`, `test_context.py`, `test_conflict_assistant.py` |
 | Failure taxonomy | ✅ | `failure_taxonomy.py` | `test_failure_taxonomy.py` |
 | Applicability / coverage map | 🟡 | `coverage.py` | `test_coverage.py` |
 | Hypothesis contract | ✅ | `hypothesis.py` | `test_hypothesis.py` |
@@ -174,7 +174,7 @@ All paths are under `src/drone_sim/` unless stated.
     landing zones as geometry.
   - Artifact URIs are not checked against the folder.
 
-### Provenance, conflicts, and completeness — ✅ detection, 🟡 resolution
+### Provenance, conflicts, and completeness — ✅
 
 - **What it does:** `EvidenceBackedDeployment` requires one `MaterialFact`
   per populated scalar IR leaf, with source anchor, SHA-256, extraction
@@ -182,14 +182,18 @@ All paths are under `src/drone_sim/` unless stated.
   missing coverage, dangling assumptions, and derivation cycles.
   `assess_evidence`/`assess_values` return `ready`, `incomplete`,
   `uncertain`, `conflicting`, or `invalid` against an `EvaluationProfile`.
-  Only `drone_hypothesis_generation_v1` is built in.
-- **Where:** `provenance.py`, `validation.py`.
-- **Test:** `uv run pytest tests/test_provenance.py tests/test_validation.py`
-- **Limitations:** the orchestrator never creates a `ConflictResolution` or
-  an `Assumption`, and no CLI lets an operator resolve a conflict. A folder
-  with contradictory values therefore stops the pipeline permanently until
-  its files change. Note the naming: `validation.ReadinessReport` is **context
-  completeness**, not the deployment-readiness report the product promises.
+  Only `drone_hypothesis_generation_v1` is built in. The operator-resolution
+  session asks a contract-validated LLM to explain each conflict and propose a
+  complete resolution, then records it only when the answer file explicitly
+  confirms that material path. Missing-field answers are checked against the
+  model proposal without allowing the model to change the operator's value,
+  and enter state as high-confidence observed evidence with operator identity.
+- **Where:** `provenance.py`, `validation.py`, `conflict_assistant.py`.
+- **Test:** `uv run pytest tests/test_provenance.py tests/test_validation.py tests/test_conflict_assistant.py`
+- **Limitations:** scripted answer-file mode is a library entry point and is
+  not yet wired into `drone-eval agent`. `Assumption` creation remains absent.
+  Note the naming: `validation.ReadinessReport` is **context completeness**,
+  not the deployment-readiness report the product promises.
 
 ### Failure taxonomy — ✅
 
@@ -306,9 +310,10 @@ All paths are under `src/drone_sim/` unless stated.
   optional JSON answers, reviewed replay hypotheses, executed evaluations,
   and an evidence-bounded summary. `investigation_loop.advance` persists the
   deterministic next action and result history.
-- **Missing:** clarification answers that change Deployment IR, multi-step
-  follow-up hypothesis creation, and full stopping/budget integration. Hosted
-  generation and summary writing exist but require explicit opt-in and a key.
+- **Missing:** the default `drone-eval agent` session does not yet invoke the
+  operator-resolution library; multi-step follow-up hypothesis creation and
+  full stopping/budget integration remain. Hosted generation and summary
+  writing exist but require explicit opt-in and a key.
 - **Test:** `uv run pytest tests/test_agent_session.py tests/test_investigation.py tests/test_investigation_loop.py`
 
 ### Not implemented — ⚪

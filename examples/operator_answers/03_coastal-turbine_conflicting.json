@@ -1,0 +1,8 @@
+{
+  "operator_id": "ci-flight-operator",
+  "conflict_confirmations": {
+    "/vehicle/mass_kg": true,
+    "/conditions/wind_speed_mps": true
+  },
+  "clarification_answers": {}
+}

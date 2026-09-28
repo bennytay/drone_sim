@@ -21,7 +21,7 @@ ANTHROPIC_API_KEY=... uv run drone-llm-eval benchmarks/llm_baseline.json --live 
 uv run pytest tests/test_document_extraction.py # anchored document proposals
 ```
 
-At the time of writing: 185 tests, all passing, in under a second. CI
+At the time of writing: 188 tests, all passing, in under a second. CI
 (`.github/workflows/test.yml`, job `test`) runs `uv run pytest -q` on Python
 3.13 for every pull request and every push to `main`.
 
@@ -60,6 +60,7 @@ Several components wired together.
 |---|---|
 | `test_context.py` | Folder → index → adapters → candidates → evidence-backed IR; resume, conflicts, stale versus current files, clarification requests |
 | `test_context_agent.py` | Replayed plan/search/parse/reassess loop, corpus efficiency, document/schema extraction, stop rules, resume and index invalidation |
+| `test_conflict_assistant.py` | Confirmed conflict resolutions, observed operator answers, answer-file sessions reaching ready, persistence, and refusal without confirmation |
 | `test_synthetic_deployments.py` | Six generated folders in `examples/synthetic_deployments/` → orchestrator → expected readiness (ready, conflicting, incomplete, invalid) |
 | `test_graph.py` | Hypothesis → `EvaluationGoal` → `GraphPlanner` → `execute` with built-in providers → measures with lineage; gaps, failures, reproducibility |
 | `test_routing.py` | Goal → `FidelityRouter` → accept, escalate, exhausted, or disagreement across fidelity levels (uses stub providers) |

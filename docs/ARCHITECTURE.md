@@ -130,9 +130,9 @@ Operator files are untrusted evidence, never instructions. Before a hosted
 call, deployment policy must allow it; configured patterns are redacted and
 the remaining text is explicitly delimited. The ledger records the hash of the
 exact delimited payload. LLM output is only a typed proposal: conflict
-resolution, thresholds, and deterministic judgments remain unavailable as LLM
-contracts; inferred evidence must retain an anchor whose hash matches checked
-source bytes.
+resolution requires explicit operator confirmation, and thresholds and
+deterministic judgments remain unavailable to the model; inferred evidence
+must retain an anchor whose hash matches checked source bytes.
 
 Every edge invocation also receives a persistent ledger entry: prompt and
 request hashes, model, explicit candidate/file-hash references, linked context
@@ -302,7 +302,7 @@ Evidence-backed Deployment IR                            ✅  ir.py, provenance.
   │
   ▼
 Context readiness gate (drone_hypothesis_generation_v1)  ✅  validation.py
-  │  stops here unless READY (conflicts cannot yet be resolved)
+  │  operator-confirmed conflicts/clarifications can be persisted before retry
   ▼
 Failure taxonomy + applicability map                     🟡  failure_taxonomy.py ✅, coverage.py 🟡 (context-exists rules only)
   │

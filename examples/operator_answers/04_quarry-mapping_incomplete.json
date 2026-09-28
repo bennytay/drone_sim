@@ -1,0 +1,47 @@
+{
+  "operator_id": "ci-flight-operator",
+  "conflict_confirmations": {},
+  "clarification_answers": {
+    "mission": {
+      "name": "Quarry mapping",
+      "objective": "Map the approved Lithgow quarry survey area",
+      "route": {
+        "points": [
+          {
+            "id": "wp-01",
+            "position": {
+              "latitude_deg": -33.48,
+              "longitude_deg": 150.15,
+              "altitude_m": 40,
+              "altitude_reference": "above_ground"
+            }
+          },
+          {
+            "id": "wp-02",
+            "position": {
+              "latitude_deg": -33.479,
+              "longitude_deg": 150.151,
+              "altitude_m": 40,
+              "altitude_reference": "above_ground"
+            }
+          }
+        ]
+      }
+    },
+    "autonomy": {
+      "mode": "supervised_autonomous",
+      "controller": "PX4",
+      "version": "1.15.0",
+      "config": null
+    },
+    "success_criteria": [
+      {
+        "id": "mapping-coverage",
+        "metric": "survey_coverage_ratio",
+        "operator": "gte",
+        "target": 0.98,
+        "unit": "ratio"
+      }
+    ]
+  }
+}

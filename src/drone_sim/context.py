@@ -22,6 +22,7 @@ from drone_sim.provenance import (
     EvidenceCandidate,
     ExtractionMethod,
     MaterialFact,
+    ConflictResolution,
     SourceAnchor,
     SourceLocationType,
     Uncertainty,
@@ -222,6 +223,8 @@ class DeploymentState(BaseModel):
     parsed_sources: dict[str, ParsedSource] = Field(default_factory=dict)
     index_signatures: dict[str, str] = Field(default_factory=dict)
     entity_links: list[EntityLink] = Field(default_factory=list)
+    resolutions: dict[str, ConflictResolution] = Field(default_factory=dict)
+    resolution_operators: dict[str, str] = Field(default_factory=dict)
 
 
 class StateStore:
@@ -380,6 +383,8 @@ class ContextOrchestrator:
         }
         if changed:
             state.attempted_fields.clear()
+            state.resolutions.clear()
+            state.resolution_operators.clear()
             state.inspected_paths.difference_update(changed)
             for path in changed:
                 state.parsed_sources.pop(path, None)
@@ -550,7 +555,12 @@ class ContextOrchestrator:
                     continue
                 competing.append(_leaf_candidate(candidate, path, relative, alternative))
             facts.append(
-                MaterialFact(path=path, selected=selected, competing=tuple(competing))
+                MaterialFact(
+                    path=path,
+                    selected=selected,
+                    competing=tuple(competing),
+                    resolution=state.resolutions.get(path),
+                )
             )
         return EvidenceBackedDeployment(deployment=deployment, facts=tuple(facts))
 
